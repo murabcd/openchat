@@ -12,6 +12,8 @@ import { api } from "@/convex/_generated/api";
 
 import { generateUUID, getMostRecentUserMessage } from "@/lib/utils";
 
+export const maxDuration = 60;
+
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export async function POST(req: Request) {
@@ -28,45 +30,42 @@ export async function POST(req: Request) {
   const chat = await convex.query(api.chats.getChatById, { chatId });
   const userMessageId = generateUUID();
 
+  if (!chat) {
+    const { text: generatedTitle } = await generateText({
+      model: openai("gpt-4o-mini"),
+      system: `
+        - Generate a short title based on the first message a user begins a conversation with
+        - Ensure it is not more than 20 characters long
+        - The title should be a summary of the user's message
+        - Do not use quotes or colons
+      `,
+      messages: [{ role: "user", content: userMessage.content }],
+    });
+
+    await convex.mutation(api.chats.createChat, {
+      title: generatedTitle,
+      chatId,
+    });
+  }
+
+  // Save user message
+  await convex.mutation(api.chats.addMessage, {
+    chatId,
+    content:
+      typeof userMessage.content === "string"
+        ? userMessage.content
+        : JSON.stringify(userMessage.content),
+    role: "user",
+    id: userMessageId,
+  });
+
   return createDataStreamResponse({
     execute: async (dataStream) => {
-      // Write user message ID to stream
       dataStream.writeData({
         type: "user-message-id",
         content: userMessageId,
       });
 
-      // Create chat if it doesn't exist
-      if (!chat) {
-        const { text: generatedTitle } = await generateText({
-          model: openai("gpt-4o-mini"),
-          system: `
-            - Generate a short title based on the first message a user begins a conversation with
-            - Ensure it is not more than 20 characters long
-            - The title should be a summary of the user's message
-            - Do not use quotes or colons
-          `,
-          messages: [{ role: "user", content: userMessage.content }],
-        });
-
-        await convex.mutation(api.chats.createChat, {
-          title: generatedTitle,
-          chatId,
-        });
-      }
-
-      // Save user message
-      await convex.mutation(api.chats.addMessage, {
-        chatId,
-        content:
-          typeof userMessage.content === "string"
-            ? userMessage.content
-            : JSON.stringify(userMessage.content),
-        role: "user",
-        id: userMessageId,
-      });
-
-      // Stream AI response
       const result = streamText({
         model: openai("gpt-4o-mini"),
         messages,
