@@ -69,3 +69,26 @@ export const deleteChatById = mutation({
     return await ctx.db.delete(chat._id);
   },
 });
+
+export const updateChatTitle = mutation({
+  args: {
+    chatId: v.string(),
+    title: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const existingChat = await ctx.db
+      .query("chats")
+      .withIndex("by_chatId", (q) => q.eq("chatId", args.chatId))
+      .first();
+
+    if (!existingChat) {
+      throw new Error("Chat not found");
+    }
+
+    await ctx.db.patch(existingChat._id, {
+      title: args.title,
+    });
+
+    return existingChat._id;
+  },
+});
