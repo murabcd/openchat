@@ -28,6 +28,7 @@ import {
 
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Doc } from "@/convex/_generated/dataModel";
 
 type Chat = {
   id: string;
@@ -92,7 +93,7 @@ export const ChatItem = memo(PureChatItem, (prevProps, nextProps) => {
   return true;
 });
 
-export function SidebarHistory() {
+export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
   const { setOpenMobile } = useSidebar();
   const { id } = useParams();
 
@@ -116,6 +117,18 @@ export function SidebarHistory() {
     title: chat.title,
     createdAt: chat._creationTime,
   }));
+
+  if (!user) {
+    return (
+      <SidebarGroup>
+        <SidebarGroupContent>
+          <div className="px-2 text-zinc-500 w-full flex flex-row justify-center items-center text-sm gap-2">
+            Login to save and revisit previous chats.
+          </div>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    );
+  }
 
   if (history === undefined) {
     return (

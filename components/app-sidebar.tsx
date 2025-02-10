@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 
 import { SidebarHistory } from "@/components/sidebar-history";
+import { SidebarUserNav } from "@/components/sidebar-user-nav";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -17,7 +18,9 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-export const AppSidebar = () => {
+import { Doc } from "@/convex/_generated/dataModel";
+
+export const AppSidebar = ({ user }: { user: Doc<"users"> | null }) => {
   const router = useRouter();
   const { setOpenMobile } = useSidebar();
 
@@ -58,8 +61,9 @@ export const AppSidebar = () => {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarHistory />
+        <SidebarHistory user={user} />
       </SidebarContent>
+      <SidebarFooter>{user && <SidebarUserNav user={user} />}</SidebarFooter>
     </Sidebar>
   );
 };
