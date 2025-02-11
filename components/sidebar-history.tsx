@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo } from "react";
 
 import { isToday, isYesterday, subMonths, subWeeks } from "date-fns";
 
