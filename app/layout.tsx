@@ -21,6 +21,18 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "OpenChat",
   description: "Open source chat app",
+  icons: {
+    icon: [
+      {
+        media: "(prefers-color-scheme: light)",
+        url: "/logo-dark.svg",
+      },
+      {
+        media: "(prefers-color-scheme: dark)",
+        url: "/logo.svg",
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
