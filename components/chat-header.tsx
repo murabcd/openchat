@@ -8,12 +8,13 @@ import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 
 import { useWindowSize } from "usehooks-ts";
-import { useSidebar } from "@/components/ui/sidebar";
 
+import { useSidebar } from "@/components/ui/sidebar";
 import { SidebarToggle } from "@/components/sidebar-toggle";
 import { Button } from "@/components/ui/button";
-
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
+import { Unauthenticated } from "convex/react";
 
 function PureChatHeader({ chatId }: { chatId: string }) {
   const router = useRouter();
@@ -44,12 +45,14 @@ function PureChatHeader({ chatId }: { chatId: string }) {
         </Tooltip>
       )}
 
-      <Button
-        className="hidden md:flex py-1.5 px-2 h-fit md:h-[34px] order-4 md:ml-auto"
-        asChild
-      >
-        <Link href="/register">Sign up</Link>
-      </Button>
+      <Unauthenticated>
+        <Button
+          className="hidden md:flex py-1.5 px-2 h-fit md:h-[34px] order-4 md:ml-auto"
+          asChild
+        >
+          <Link href="/register">Sign up</Link>
+        </Button>
+      </Unauthenticated>
     </header>
   );
 }

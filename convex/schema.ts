@@ -9,7 +9,7 @@ export default defineSchema({
     email: v.string(),
     image: v.string(),
     emailVerificationTime: v.optional(v.number()),
-  }).index("by_email", ["email"]),
+  }).index("email", ["email"]),
 
   chats: defineTable({
     title: v.string(),
