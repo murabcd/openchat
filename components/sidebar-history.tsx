@@ -101,7 +101,7 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
   const router = useRouter();
 
   const handleDelete = async (chatId: string) => {
-    toast.promise(deleteChat({ chatId }), {
+    toast.promise(deleteChat({ id: chatId }), {
       loading: "Deleting chat...",
       success: () => "Chat deleted",
       error: "Failed to delete chat",

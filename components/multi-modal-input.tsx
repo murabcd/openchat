@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { SuggestedActions } from "@/components/suggested-actions";
 
 import equal from "fast-deep-equal";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 
 function PureMultiModalInput({
@@ -68,6 +68,8 @@ function PureMultiModalInput({
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
+  const user = useQuery(api.users.getUser);
+  const userId = user?._id;
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -130,8 +132,14 @@ function PureMultiModalInput({
 
   const uploadFile = async (file: File) => {
     try {
+      if (!userId) {
+        throw new Error("User not authenticated");
+      }
       // Step 1: Get the upload URL
-      const postUrl = await generateUploadUrl({ contentType: file.type });
+      const postUrl = await generateUploadUrl({
+        contentType: file.type,
+        userId,
+      });
 
       // Step 2: Upload the file
       const result = await fetch(postUrl, {
@@ -146,6 +154,7 @@ function PureMultiModalInput({
         storageId,
         name: file.name,
         contentType: file.type,
+        userId,
       });
 
       return {

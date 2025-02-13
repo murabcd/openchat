@@ -21,6 +21,13 @@ export function generateUUID(): string {
   });
 }
 
+export function getLocalStorage(key: string) {
+  if (typeof window !== "undefined") {
+    return JSON.parse(localStorage.getItem(key) || "[]");
+  }
+  return [];
+}
+
 export function sanitizeResponseMessages(
   messages: Array<CoreToolMessage | CoreAssistantMessage>
 ): Array<CoreToolMessage | CoreAssistantMessage> {
