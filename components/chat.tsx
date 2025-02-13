@@ -12,9 +12,10 @@ import { MultiModalInput } from "@/components/multi-modal-input";
 interface ChatProps {
   chatId: string;
   initialMessages: Array<Message>;
+  selectedModelId: string;
 }
 
-export const Chat = ({ chatId, initialMessages }: ChatProps) => {
+export const Chat = ({ chatId, initialMessages, selectedModelId }: ChatProps) => {
   const {
     messages,
     setMessages,
@@ -34,7 +35,7 @@ export const Chat = ({ chatId, initialMessages }: ChatProps) => {
 
   return (
     <div className="flex flex-col min-w-0 h-dvh bg-background">
-      <ChatHeader chatId={chatId} />
+      <ChatHeader chatId={chatId} selectedModelId={selectedModelId} />
 
       <Messages
         chatId={chatId}

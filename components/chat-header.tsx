@@ -9,6 +9,7 @@ import { Plus } from "lucide-react";
 
 import { useWindowSize } from "usehooks-ts";
 
+import { ModelSelector } from "@/components/model-selector";
 import { useSidebar } from "@/components/ui/sidebar";
 import { SidebarToggle } from "@/components/sidebar-toggle";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,13 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 import { Unauthenticated } from "convex/react";
 
-function PureChatHeader({ chatId }: { chatId: string }) {
+function PureChatHeader({
+  chatId,
+  selectedModelId,
+}: {
+  chatId: string;
+  selectedModelId: string;
+}) {
   const router = useRouter();
   const { open } = useSidebar();
 
@@ -44,6 +51,8 @@ function PureChatHeader({ chatId }: { chatId: string }) {
           <TooltipContent>New chat</TooltipContent>
         </Tooltip>
       )}
+
+      <ModelSelector selectedModelId={selectedModelId} />
 
       <Unauthenticated>
         <Button
