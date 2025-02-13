@@ -39,13 +39,15 @@ export default function LoginPage() {
           </div>
           <UserAuthForm type="login" />
           <p className="text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
-            <Link
-              href="/register"
-              className="hover:text-brand underline underline-offset-4"
-            >
-              Sign up
+            By signing up, you agree to our{" "}
+            <Link href="/#" className="hover:text-brand underline underline-offset-4">
+              Terms
+            </Link>{" "}
+            and{" "}
+            <Link href="/#" className="hover:text-brand underline underline-offset-4">
+              Privacy
             </Link>
+            .
           </p>
         </div>
       </div>
