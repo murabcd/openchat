@@ -114,3 +114,13 @@ export function convertToUIMessages(messages: Array<DBMessage>): Array<Message> 
     return chatMessages;
   }, []);
 }
+
+export function getMessageIdFromAnnotations(message: Message) {
+  if (!message.annotations) return message.id;
+
+  const [annotation] = message.annotations;
+  if (!annotation) return message.id;
+
+  // @ts-expect-error messageIdFromServer is not defined in MessageAnnotation
+  return annotation.messageIdFromServer;
+}

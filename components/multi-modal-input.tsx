@@ -146,7 +146,7 @@ function PureMultiModalInput({
       };
     } catch (error) {
       console.error("Error uploading file:", error);
-      toast.error("Failed to upload file, please try again!");
+      toast.error("Failed to upload file, please try again");
     }
   };
 
@@ -227,7 +227,7 @@ function PureMultiModalInput({
             event.preventDefault();
 
             if (isLoading) {
-              toast.error("Please wait for the model to finish its response!");
+              toast.error("Please wait for the model to finish its response");
             } else {
               submitForm();
             }

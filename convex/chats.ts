@@ -72,6 +72,18 @@ export const deleteChatById = mutation({
       .withIndex("by_chat", (q) => q.eq("chatId", args.id))
       .collect();
 
+    // Delete all votes in the chat
+    const votes = await ctx.db
+      .query("votes")
+      .filter((q) => q.eq(q.field("chatId"), args.id))
+      .collect();
+
+    // Delete votes
+    for (const vote of votes) {
+      await ctx.db.delete(vote._id);
+    }
+
+    // Delete messages
     for (const message of messages) {
       await ctx.db.delete(message._id);
     }

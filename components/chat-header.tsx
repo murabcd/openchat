@@ -7,15 +7,16 @@ import { useRouter } from "next/navigation";
 
 import { useWindowSize } from "usehooks-ts";
 
+import { Plus } from "lucide-react";
+
 import { ModelSelector } from "@/components/model-selector";
 import { SidebarToggle } from "@/components/sidebar-toggle";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { VisibilityType, VisibilitySelector } from "@/components/visibility-selector";
 
-import { Authenticated, Unauthenticated } from "convex/react";
+import { Unauthenticated } from "convex/react";
 
 function PureChatHeader({
   chatId,
@@ -60,13 +61,13 @@ function PureChatHeader({
         <ModelSelector selectedModelId={selectedModelId} className="order-1 md:order-2" />
       )}
 
-      <Authenticated>
+      {!isReadonly && (
         <VisibilitySelector
           chatId={chatId}
           selectedVisibilityType={selectedVisibilityType}
           className="order-1 md:order-3"
         />
-      </Authenticated>
+      )}
 
       <Unauthenticated>
         <Button
