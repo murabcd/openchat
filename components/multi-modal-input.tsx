@@ -28,8 +28,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { SuggestedActions } from "@/components/suggested-actions";
 
 import equal from "fast-deep-equal";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "../convex/_generated/api";
 
 function PureMultiModalInput({
   chatId,
@@ -68,8 +66,6 @@ function PureMultiModalInput({
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
-  const user = useQuery(api.users.getUser);
-  const userId = user?._id;
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -127,40 +123,26 @@ function PureMultiModalInput({
     }
   }, [attachments, handleSubmit, setAttachments, setLocalStorageInput, width, chatId]);
 
-  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
-  const saveFile = useMutation(api.files.saveFile);
-
   const uploadFile = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
     try {
-      if (!userId) {
-        throw new Error("User not authenticated");
-      }
-      // Step 1: Get the upload URL
-      const postUrl = await generateUploadUrl({
-        contentType: file.type,
-        userId,
-      });
-
-      // Step 2: Upload the file
-      const result = await fetch(postUrl, {
+      const response = await fetch("/api/files/upload", {
         method: "POST",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
-      const { storageId } = await result.json();
-
-      // Step 3: Save the file metadata
-      const fileData = await saveFile({
-        storageId,
-        name: file.name,
-        contentType: file.type,
-        userId,
+        body: formData,
       });
 
+      if (!response.ok) {
+        const { error } = await response.json();
+        throw new Error(error);
+      }
+
+      const data = await response.json();
       return {
-        url: fileData.url,
-        name: fileData.name,
-        contentType: fileData.contentType,
+        url: data.url,
+        name: data.name,
+        contentType: data.type,
       };
     } catch (error) {
       console.error("Error uploading file:", error);

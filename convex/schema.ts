@@ -26,14 +26,6 @@ export default defineSchema({
     userId: v.id("users"),
   }).index("by_chat", ["chatId"]),
 
-  files: defineTable({
-    storageId: v.id("storage"),
-    name: v.string(),
-    type: v.string(),
-    url: v.string(),
-    userId: v.id("users"),
-  }).index("by_userId", ["userId"]),
-
   documents: defineTable({
     title: v.string(),
     kind: v.union(v.literal("text"), v.literal("code")),
