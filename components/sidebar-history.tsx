@@ -7,7 +7,7 @@ import { isToday, isYesterday, subMonths, subWeeks } from "date-fns";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
-import { CircleCheck, Globe, Lock, MoreHorizontal, Share, Trash } from "lucide-react";
+import { CircleCheck, Globe, Lock, MoreHorizontal, Share2, Trash } from "lucide-react";
 
 import { toast } from "sonner";
 import {
@@ -99,7 +99,7 @@ const PureChatItem = ({
         <DropdownMenuContent side="bottom" align="end">
           <DropdownMenuSub>
             <DropdownMenuSubTrigger className="cursor-pointer">
-              <Share className="w-4 h-4" />
+              <Share2 className="w-4 h-4" />
               <span>Share</span>
             </DropdownMenuSubTrigger>
             <DropdownMenuPortal>

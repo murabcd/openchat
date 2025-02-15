@@ -1,6 +1,15 @@
+"use server";
+
 import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import type { CoreMessage } from "ai";
+
+import { cookies } from "next/headers";
+
+export async function saveModelId(model: string) {
+  const cookieStore = await cookies();
+  cookieStore.set("model-id", model);
+}
 
 export async function generateTitleFromUserMessage({
   message,

@@ -38,7 +38,7 @@ This app ships with [Openai](https://openai.com/) provider as the default. Howev
 
 You can deploy your own version of the OpenChat to Vercel with one click:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fai-chatbot&env=CONVEX_DEPLOY_KEY,OPENAI_API_KEY&envDescription=Learn%20more%20about%20how%20to%20get%20the%20API%20Keys%20for%20the%20application%26envLink%3Dhttps%3A%2F%2Fgithub.com%2Fmuradpm%2Fopenchat%2Fblob%2Fmain%2F.env.example&demo-title=OpenChat%26demo-description%3DAn%20open-source%20AI%20chatbot%20built%20with%20Next.js%2015%2C%20Convex%2C%20and%20AI%20SDK.&demo-url=https%3A%2F%2Fopenchat-beta.vercel.app&stores=[{%22type%22%3A%22postgres%22},{%22type%22%3A%22blob%22}])
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmuradpm%2Fopenchat&env=CONVEX_DEPLOY_KEY,OPENAI_API_KEY&envDescription=Learn%20more%20about%20how%20to%20get%20the%20API%20Keys%20for%20the%20application&envLink=https%3A%2F%2Fgithub.com%2Fmuradpm%2Fopenchat%2Fblob%2Fmain%2F.env.example&demo-title=OpenChat&demo-description=An%20open-source%20AI%20chatbot%20built%20with%20Next.js%2015%2C%20Convex%2C%20and%20AI%20SDK.&demo-url=https%3A%2F%2Fopenchat-beta.vercel.app)
 
 ## Running locally
 

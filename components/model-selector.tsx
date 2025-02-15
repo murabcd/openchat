@@ -2,7 +2,6 @@
 
 import { startTransition, useMemo, useOptimistic, useState } from "react";
 
-import { saveModelId } from "@/app/(chat)/actions";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,6 +9,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+import { saveModelId } from "@/lib/ai/utils";
 import { models } from "@/lib/ai/models";
 import { cn } from "@/lib/utils";
 
