@@ -22,9 +22,11 @@ export default async function ChatPage(props: { params: Promise<{ id: string }> 
 
   return (
     <Chat
-      chatId={chatId}
+      id={chatId}
       initialMessages={convertToUIMessages(messagesFromDb)}
       selectedModelId={selectedModelId}
+      selectedVisibilityType="private"
+      isReadonly={false}
     />
   );
 }

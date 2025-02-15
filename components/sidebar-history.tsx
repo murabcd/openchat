@@ -1,19 +1,23 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useState, useMemo } from "react";
 
 import { isToday, isYesterday, subMonths, subWeeks } from "date-fns";
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
-import { MoreHorizontal, Trash } from "lucide-react";
+import { CircleCheck, Globe, Lock, MoreHorizontal, Share, Trash } from "lucide-react";
 
 import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuPortal,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -25,15 +29,28 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useChatVisibility } from "@/hooks/use-chat-visibility";
 
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Doc } from "@/convex/_generated/dataModel";
+import { VisibilityType } from "@/components/visibility-selector";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type Chat = {
   id: string;
   title: string;
   createdAt: number;
+  visibility: VisibilityType;
 };
 
 type GroupedChats = {
@@ -55,6 +72,11 @@ const PureChatItem = ({
   onDelete: (chatId: string) => void;
   setOpenMobile: (open: boolean) => void;
 }) => {
+  const { visibilityType, setVisibilityType } = useChatVisibility({
+    chatId: chat.id,
+    initialVisibility: chat.visibility,
+  });
+
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive}>
@@ -75,6 +97,45 @@ const PureChatItem = ({
         </DropdownMenuTrigger>
 
         <DropdownMenuContent side="bottom" align="end">
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger className="cursor-pointer">
+              <Share className="w-4 h-4" />
+              <span>Share</span>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem
+                  className="cursor-pointer flex-row justify-between"
+                  onClick={() => {
+                    setVisibilityType("private");
+                  }}
+                >
+                  <div className="flex flex-row gap-2 items-center">
+                    <Lock className="w-4 h-4" />
+                    <span>Private</span>
+                  </div>
+                  {visibilityType === "private" ? (
+                    <CircleCheck className="w-4 h-4" />
+                  ) : null}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer flex-row justify-between"
+                  onClick={() => {
+                    setVisibilityType("public");
+                  }}
+                >
+                  <div className="flex flex-row gap-2 items-center">
+                    <Globe className="w-4 h-4" />
+                    <span>Public</span>
+                  </div>
+                  {visibilityType === "public" ? (
+                    <CircleCheck className="w-4 h-4" />
+                  ) : null}
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+          </DropdownMenuSub>
+
           <DropdownMenuItem
             className="cursor-pointer text-destructive focus:bg-destructive/15 focus:text-destructive dark:text-red-500"
             onSelect={() => onDelete(chat.id)}
@@ -96,34 +157,43 @@ export const ChatItem = memo(PureChatItem, (prevProps, nextProps) => {
 export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
   const { setOpenMobile } = useSidebar();
   const { id } = useParams();
-
-  const deleteChat = useMutation(api.chats.deleteChatById);
   const router = useRouter();
 
-  const handleDelete = async (chatId: string) => {
-    toast.promise(deleteChat({ id: chatId }), {
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  const deleteChat = useMutation(api.chats.deleteChatById);
+
+  const handleDelete = async () => {
+    toast.promise(deleteChat({ id: deleteId! }), {
       loading: "Deleting chat...",
-      success: () => "Chat deleted",
+      success: () => {
+        setShowDeleteDialog(false);
+        if (deleteId === id) {
+          router.push("/");
+        }
+        return "Chat deleted";
+      },
       error: "Failed to delete chat",
     });
-
-    if (chatId === id) {
-      router.push("/");
-    }
   };
 
-  const history = useQuery(api.chats.listChats)?.map((chat) => ({
-    id: chat.chatId,
-    title: chat.title,
-    createdAt: chat._creationTime,
-  }));
+  const chats = useQuery(api.chats.listChats);
+  const history = useMemo(() => {
+    return chats?.map((chat) => ({
+      id: chat.chatId,
+      title: chat.title,
+      createdAt: chat._creationTime,
+      visibility: chat.visibility,
+    }));
+  }, [chats]);
 
   if (!user) {
     return (
       <SidebarGroup>
         <SidebarGroupContent>
           <div className="px-2 text-zinc-500 w-full flex flex-row justify-center items-center text-sm gap-2">
-            Login to save and revisit previous chats.
+            Login to save, share, and revisit previous chats.
           </div>
         </SidebarGroupContent>
       </SidebarGroup>
@@ -171,6 +241,7 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
       id: string;
       title: string;
       createdAt: number;
+      visibility: VisibilityType;
     }>
   ): GroupedChats => {
     const now = new Date();
@@ -226,7 +297,10 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
                             key={chat.id}
                             chat={chat}
                             isActive={chat.id === id}
-                            onDelete={handleDelete}
+                            onDelete={(chatId) => {
+                              setDeleteId(chatId);
+                              setShowDeleteDialog(true);
+                            }}
                             setOpenMobile={setOpenMobile}
                           />
                         ))}
@@ -243,7 +317,10 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
                             key={chat.id}
                             chat={chat}
                             isActive={chat.id === id}
-                            onDelete={handleDelete}
+                            onDelete={(chatId) => {
+                              setDeleteId(chatId);
+                              setShowDeleteDialog(true);
+                            }}
                             setOpenMobile={setOpenMobile}
                           />
                         ))}
@@ -260,7 +337,10 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
                             key={chat.id}
                             chat={chat}
                             isActive={chat.id === id}
-                            onDelete={handleDelete}
+                            onDelete={(chatId) => {
+                              setDeleteId(chatId);
+                              setShowDeleteDialog(true);
+                            }}
                             setOpenMobile={setOpenMobile}
                           />
                         ))}
@@ -277,7 +357,10 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
                             key={chat.id}
                             chat={chat}
                             isActive={chat.id === id}
-                            onDelete={handleDelete}
+                            onDelete={(chatId) => {
+                              setDeleteId(chatId);
+                              setShowDeleteDialog(true);
+                            }}
                             setOpenMobile={setOpenMobile}
                           />
                         ))}
@@ -294,7 +377,10 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
                             key={chat.id}
                             chat={chat}
                             isActive={chat.id === id}
-                            onDelete={handleDelete}
+                            onDelete={(chatId) => {
+                              setDeleteId(chatId);
+                              setShowDeleteDialog(true);
+                            }}
                             setOpenMobile={setOpenMobile}
                           />
                         ))}
@@ -306,6 +392,22 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your chat and
+              remove it from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

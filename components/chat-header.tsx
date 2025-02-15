@@ -5,24 +5,28 @@ import { memo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { Plus } from "lucide-react";
-
 import { useWindowSize } from "usehooks-ts";
 
 import { ModelSelector } from "@/components/model-selector";
-import { useSidebar } from "@/components/ui/sidebar";
 import { SidebarToggle } from "@/components/sidebar-toggle";
 import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { useSidebar } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { VisibilityType, VisibilitySelector } from "@/components/visibility-selector";
 
-import { Unauthenticated } from "convex/react";
+import { Authenticated, Unauthenticated } from "convex/react";
 
 function PureChatHeader({
   chatId,
   selectedModelId,
+  selectedVisibilityType,
+  isReadonly,
 }: {
   chatId: string;
   selectedModelId: string;
+  selectedVisibilityType: VisibilityType;
+  isReadonly: boolean;
 }) {
   const router = useRouter();
   const { open } = useSidebar();
@@ -44,7 +48,7 @@ function PureChatHeader({
                 router.refresh();
               }}
             >
-              <Plus />
+              <Plus className="w-4 h-4" />
               <span className="md:sr-only">New chat</span>
             </Button>
           </TooltipTrigger>
@@ -52,7 +56,17 @@ function PureChatHeader({
         </Tooltip>
       )}
 
-      <ModelSelector selectedModelId={selectedModelId} />
+      {!isReadonly && (
+        <ModelSelector selectedModelId={selectedModelId} className="order-1 md:order-2" />
+      )}
+
+      <Authenticated>
+        <VisibilitySelector
+          chatId={chatId}
+          selectedVisibilityType={selectedVisibilityType}
+          className="order-1 md:order-3"
+        />
+      </Authenticated>
 
       <Unauthenticated>
         <Button
