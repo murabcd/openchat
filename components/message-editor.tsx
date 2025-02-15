@@ -4,9 +4,12 @@ import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 
 import { ChatRequestOptions, Message } from "ai";
 import { toast } from "sonner";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useUserMessageId } from "@/hooks/use-user-message-id";
 
 export type MessageEditorProps = {
   message: Message;
@@ -21,9 +24,11 @@ export function MessageEditor({
   setMessages,
   reload,
 }: MessageEditorProps) {
+  const { userMessageIdFromServer } = useUserMessageId();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [draftContent, setDraftContent] = useState<string>(message.content);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const deleteTrailingMessages = useMutation(api.messages.deleteTrailingMessages);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -68,14 +73,17 @@ export function MessageEditor({
           disabled={isSubmitting}
           onClick={async () => {
             setIsSubmitting(true);
+            const messageId = userMessageIdFromServer ?? message.id;
 
-            if (!message.id) {
-              toast.error("Something went wrong, please try again!");
+            if (!messageId) {
+              toast.error("Message ID not found!");
               setIsSubmitting(false);
               return;
             }
 
             try {
+              await deleteTrailingMessages({ messageId });
+
               setMessages((messages) => {
                 const index = messages.findIndex((m) => m.id === message.id);
                 if (index !== -1) {
@@ -91,7 +99,11 @@ export function MessageEditor({
               setMode("view");
               reload();
             } catch (error) {
-              toast.error("Something went wrong, please try again");
+              toast.error(
+                error instanceof Error
+                  ? `Error: ${error.message}`
+                  : "Something went wrong, please try again"
+              );
             } finally {
               setIsSubmitting(false);
             }

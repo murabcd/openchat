@@ -18,6 +18,7 @@ import type * as chats from "../chats.js";
 import type * as documents from "../documents.js";
 import type * as files from "../files.js";
 import type * as http from "../http.js";
+import type * as messages from "../messages.js";
 import type * as users from "../users.js";
 
 /**
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   documents: typeof documents;
   files: typeof files;
   http: typeof http;
+  messages: typeof messages;
   users: typeof users;
 }>;
 export declare const api: FilterApi<

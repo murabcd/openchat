@@ -189,21 +189,3 @@ export const updateChatVisibility = mutation({
     });
   },
 });
-
-export const deleteMessagesByChatIdAfterTimestamp = mutation({
-  args: {
-    chatId: v.string(),
-    timestamp: v.number(),
-  },
-  handler: async (ctx, args) => {
-    const messages = await ctx.db
-      .query("messages")
-      .withIndex("by_chat", (q) => q.eq("chatId", args.chatId))
-      .filter((q) => q.gte(q.field("_creationTime"), args.timestamp))
-      .collect();
-
-    for (const message of messages) {
-      await ctx.db.delete(message._id);
-    }
-  },
-});

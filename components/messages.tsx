@@ -7,7 +7,11 @@ import { PreviewMessage, ThinkingMessage } from "@/components/message";
 
 import equal from "fast-deep-equal";
 
+import { Id } from "@/convex/_generated/dataModel";
+
 type Vote = {
+  _id: Id<"votes">;
+  _creationTime: number;
   chatId: string;
   messageId: string;
   isUpvoted: boolean;
@@ -20,10 +24,18 @@ interface MessagesProps {
   setMessages: (messages: Message[] | ((messages: Message[]) => Message[])) => void;
   reload: (chatRequestOptions?: ChatRequestOptions) => Promise<string | null | undefined>;
   isReadonly: boolean;
-  votes: Array<Vote>;
+  votes: Array<Vote> | undefined;
 }
 
-function PureMessages({ chatId, isLoading, messages, setMessages }: MessagesProps) {
+function PureMessages({
+  chatId,
+  isLoading,
+  messages,
+  setMessages,
+  reload,
+  isReadonly,
+  votes,
+}: MessagesProps) {
   const [messagesContainerRef, messagesEndRef] = useScrollToBottom<HTMLDivElement>();
 
   return (
@@ -38,6 +50,9 @@ function PureMessages({ chatId, isLoading, messages, setMessages }: MessagesProp
           message={message}
           isLoading={isLoading && messages.length - 1 === index}
           setMessages={setMessages}
+          vote={votes ? votes.find((vote) => vote.messageId === message.id) : undefined}
+          isReadonly={isReadonly}
+          reload={reload}
         />
       ))}
 
