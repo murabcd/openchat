@@ -9,7 +9,6 @@ import { api } from "@/convex/_generated/api";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useUserMessageId } from "@/hooks/use-user-message-id";
 
 export type MessageEditorProps = {
   message: Message;
@@ -24,7 +23,6 @@ export function MessageEditor({
   setMessages,
   reload,
 }: MessageEditorProps) {
-  const { userMessageIdFromServer } = useUserMessageId();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [draftContent, setDraftContent] = useState<string>(message.content);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -36,6 +34,15 @@ export function MessageEditor({
     }
   }, []);
 
+  useEffect(() => {
+    // Log the initial message to see what ID we're getting
+    console.log("Editor: Initial message:", {
+      id: message.id,
+      role: message.role,
+      content: message.content.slice(0, 50) + "...",
+    });
+  }, [message]);
+
   const adjustHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -46,6 +53,71 @@ export function MessageEditor({
   const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setDraftContent(event.target.value);
     adjustHeight();
+  };
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    const messageId = message.id;
+
+    if (!messageId) {
+      toast.error("Message ID not found!");
+      setIsSubmitting(false);
+      return;
+    }
+
+    console.log("Editor: Attempting to edit message:", {
+      messageId,
+      role: message.role,
+      originalContent: message.content.slice(0, 50) + "...",
+      newContent: draftContent.slice(0, 50) + "...",
+    });
+
+    try {
+      setMessages((messages) => {
+        const index = messages.findIndex((m) => m.id === message.id);
+        console.log(
+          "Editor: Current messages in state:",
+          messages.map((m) => ({
+            id: m.id,
+            role: m.role,
+            content: m.content.slice(0, 50) + "...",
+          }))
+        );
+        console.log("Editor: Found message at index:", index);
+
+        if (index !== -1) {
+          const updatedMessage = {
+            ...message,
+            content: draftContent,
+          };
+          return [...messages.slice(0, index), updatedMessage];
+        }
+        return messages;
+      });
+
+      console.log("Editor: Calling deleteTrailingMessages with ID:", messageId);
+      await deleteTrailingMessages({ messageId });
+
+      setMode("view");
+      await reload();
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? `Error: ${error.message}`
+          : "Something went wrong, please try again"
+      );
+
+      // Revert the optimistic update on error
+      setMessages((messages) => {
+        const index = messages.findIndex((m) => m.id === message.id);
+        if (index !== -1) {
+          return [...messages.slice(0, index), message];
+        }
+        return messages;
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -71,43 +143,7 @@ export function MessageEditor({
           variant="default"
           className="h-fit py-2 px-3"
           disabled={isSubmitting}
-          onClick={async () => {
-            setIsSubmitting(true);
-            const messageId = userMessageIdFromServer ?? message.id;
-
-            if (!messageId) {
-              toast.error("Message ID not found!");
-              setIsSubmitting(false);
-              return;
-            }
-
-            try {
-              await deleteTrailingMessages({ messageId });
-
-              setMessages((messages) => {
-                const index = messages.findIndex((m) => m.id === message.id);
-                if (index !== -1) {
-                  const updatedMessage = {
-                    ...message,
-                    content: draftContent,
-                  };
-                  return [...messages.slice(0, index), updatedMessage];
-                }
-                return messages;
-              });
-
-              setMode("view");
-              reload();
-            } catch (error) {
-              toast.error(
-                error instanceof Error
-                  ? `Error: ${error.message}`
-                  : "Something went wrong, please try again"
-              );
-            } finally {
-              setIsSubmitting(false);
-            }
-          }}
+          onClick={handleSubmit}
         >
           {isSubmitting ? "Sending..." : "Send"}
         </Button>

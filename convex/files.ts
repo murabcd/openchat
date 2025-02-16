@@ -19,7 +19,6 @@ export const getAttachmentUrl = mutation({
   handler: async (ctx, args) => {
     const url = await ctx.storage.getUrl(args.storageId);
     if (!url) throw new Error("Failed to get attachment URL");
-
     return {
       storageId: args.storageId,
       name: args.name,

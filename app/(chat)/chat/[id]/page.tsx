@@ -1,32 +1,63 @@
 import { cookies } from "next/headers";
-
-import { Chat } from "@/components/chat";
+import { notFound } from "next/navigation";
 
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
+import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 
+import { Chat } from "@/components/chat";
 import { convertToUIMessages } from "@/lib/utils";
-import { models } from "@/lib/ai/models";
-import { DEFAULT_MODEL_NAME } from "@/lib/ai/models";
+
+import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 
 export default async function ChatPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const { id: chatId } = params;
 
-  const messagesFromDb = await fetchQuery(api.chats.getChatMessages, { chatId });
+  const chat = await fetchQuery(api.chats.getChatById, { chatId });
+
+  if (!chat) {
+    notFound();
+  }
+
+  const token = await convexAuthNextjsToken().catch(() => null);
+
+  const user = token
+    ? await fetchQuery(api.users.getUser, {}, { token }).catch(() => null)
+    : null;
+
+  if (chat.visibility === "private") {
+    if (!user) {
+      return notFound();
+    }
+
+    if (user._id !== chat.userId) {
+      return notFound();
+    }
+  }
+
+  const messagesFromDb = await fetchQuery(api.messages.getMessagesByChatId, { chatId });
 
   const cookieStore = await cookies();
-  const modelIdFromCookie = cookieStore.get("model-id")?.value;
-  const selectedModelId =
-    models.find((model) => model.id === modelIdFromCookie)?.id || DEFAULT_MODEL_NAME;
+  const chatModelFromCookie = cookieStore.get("chat-model");
+  console.log("Chat model:", {
+    fromCookie: chatModelFromCookie?.value,
+    default: DEFAULT_CHAT_MODEL,
+  });
 
-  return (
+  const chatComponent = (selectedModel: string) => (
     <Chat
       id={chatId}
       initialMessages={convertToUIMessages(messagesFromDb)}
-      selectedModelId={selectedModelId}
-      selectedVisibilityType="private"
-      isReadonly={false}
+      selectedChatModel={selectedModel}
+      selectedVisibilityType={chat.visibility}
+      isReadonly={user?._id !== chat.userId}
     />
   );
+
+  if (!chatModelFromCookie) {
+    return chatComponent(DEFAULT_CHAT_MODEL);
+  }
+
+  return chatComponent(chatModelFromCookie.value);
 }

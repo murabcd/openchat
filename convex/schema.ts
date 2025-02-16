@@ -16,21 +16,28 @@ export default defineSchema({
     chatId: v.string(),
     userId: v.id("users"),
     visibility: v.union(v.literal("private"), v.literal("public")),
+    createdAt: v.number(),
   }).index("by_chatId", ["chatId"]),
 
   messages: defineTable({
-    content: v.string(),
-    role: v.union(v.literal("user"), v.literal("assistant")),
+    content: v.any(),
+    role: v.union(v.literal("user"), v.literal("assistant"), v.literal("tool")),
     id: v.string(),
     chatId: v.string(),
     userId: v.id("users"),
-  }).index("by_chat", ["chatId"]),
+    state: v.union(v.literal("complete"), v.literal("in_progress")),
+    createdAt: v.number(),
+  })
+    .index("by_chat", ["chatId"])
+    .index("by_createdAt", ["createdAt"])
+    .index("by_message_id", ["id"]),
 
   documents: defineTable({
     title: v.string(),
     kind: v.union(v.literal("text"), v.literal("code")),
     content: v.string(),
     userId: v.id("users"),
+    createdAt: v.number(),
   }).index("by_userId", ["userId"]),
 
   suggestions: defineTable({
@@ -40,6 +47,7 @@ export default defineSchema({
     description: v.string(),
     isResolved: v.boolean(),
     userId: v.id("users"),
+    createdAt: v.number(),
   }).index("by_documentId", ["documentId"]),
 
   votes: defineTable({

@@ -2,38 +2,25 @@
 
 import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
-import type { CoreMessage } from "ai";
+import type { Message } from "ai";
 
 import { cookies } from "next/headers";
 
-export async function saveModelId(model: string) {
+export async function saveChatModelAsCookie(model: string) {
   const cookieStore = await cookies();
-  cookieStore.set("model-id", model);
+  cookieStore.set("chat-model", model);
 }
 
-export async function generateTitleFromUserMessage({
-  message,
-}: {
-  message: CoreMessage;
-}): Promise<string> {
-  const content =
-    typeof message.content === "string"
-      ? message.content
-      : Array.isArray(message.content)
-        ? message.content.map((part) => ("text" in part ? part.text : "")).join(" ")
-        : "";
-
-  const { text: generatedTitle } = await generateText({
+export async function generateTitleFromUserMessage({ message }: { message: Message }) {
+  const { text: title } = await generateText({
     model: openai("gpt-4o-mini"),
-    system: `
-      - Generate a short title based on the first message a user begins a conversation with
-      - Ensure it is not more than 20 characters long
-      - The title should be a summary of the user's message
-      - Only capitalize the first word
-      - Do not use quotes or colons
-    `,
-    messages: [{ role: "user", content }],
+    system: `\n
+    - you will generate a short title based on the first message a user begins a conversation with
+    - ensure it is not more than 80 characters long
+    - the title should be a summary of the user's message
+    - do not use quotes or colons`,
+    prompt: JSON.stringify(message),
   });
 
-  return generatedTitle;
+  return title;
 }

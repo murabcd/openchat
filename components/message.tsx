@@ -1,10 +1,14 @@
 "use client";
 
-import type { ChatRequestOptions, Message } from "ai";
-import { AnimatePresence, motion } from "framer-motion";
 import { memo, useState } from "react";
+
+import type { ChatRequestOptions, Message } from "ai";
+
+import { AnimatePresence, motion } from "framer-motion";
+
 import { Sparkles, Pencil } from "lucide-react";
-import equal from "fast-deep-equal";
+
+import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -12,8 +16,10 @@ import { MessageActions } from "@/components/message-actions";
 import { MessageEditor } from "@/components/message-editor";
 import { Markdown } from "@/components/markdown";
 import { PreviewAttachment } from "@/components/preview-attachment";
+import { MessageReasoning } from "@/components/message-reasoning";
 
-import { cn } from "@/lib/utils";
+import equal from "fast-deep-equal";
+
 import type { Doc } from "@/convex/_generated/dataModel";
 
 const PurePreviewMessage = ({
@@ -54,9 +60,7 @@ const PurePreviewMessage = ({
         >
           {message.role === "assistant" && (
             <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
-              <div className="translate-y-px">
-                <Sparkles className="w-4 h-4" />
-              </div>
+              <Sparkles className="w-4 h-4" />
             </div>
           )}
 
@@ -69,7 +73,11 @@ const PurePreviewMessage = ({
               </div>
             )}
 
-            {message.content && mode === "view" && (
+            {message.reasoning && (
+              <MessageReasoning isLoading={isLoading} reasoning={message.reasoning} />
+            )}
+
+            {(message.content || message.reasoning) && mode === "view" && (
               <div className="flex flex-row gap-2 items-start">
                 {message.role === "user" && !isReadonly && (
                   <Tooltip>
@@ -128,6 +136,7 @@ const PurePreviewMessage = ({
 
 export const PreviewMessage = memo(PurePreviewMessage, (prevProps, nextProps) => {
   if (prevProps.isLoading !== nextProps.isLoading) return false;
+  if (prevProps.message.reasoning !== nextProps.message.reasoning) return false;
   if (prevProps.message.content !== nextProps.message.content) return false;
   if (!equal(prevProps.message.toolInvocations, nextProps.message.toolInvocations))
     return false;

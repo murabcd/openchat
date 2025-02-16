@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
-export const createDocument = mutation({
+export const saveDocument = mutation({
   args: {
     id: v.string(),
     title: v.string(),
@@ -11,10 +11,8 @@ export const createDocument = mutation({
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("documents", {
-      title: args.title,
-      kind: args.kind,
-      content: args.content,
-      userId: args.userId,
+      ...args,
+      createdAt: Date.now(),
     });
   },
 });
@@ -22,11 +20,10 @@ export const createDocument = mutation({
 export const getDocumentById = query({
   args: { id: v.string() },
   handler: async (ctx, args) => {
-    const document = await ctx.db
+    return await ctx.db
       .query("documents")
       .filter((q) => q.eq(q.field("_id"), args.id))
       .first();
-    return document;
   },
 });
 
@@ -41,9 +38,7 @@ export const updateDocument = mutation({
       .query("documents")
       .filter((q) => q.eq(q.field("_id"), args.id))
       .first();
-
     if (!document) throw new Error("Document not found");
-
     await ctx.db.patch(document._id, { content: args.content });
     return document._id;
   },
@@ -68,5 +63,34 @@ export const saveSuggestions = mutation({
     return await Promise.all(
       args.suggestions.map((suggestion) => ctx.db.insert("suggestions", suggestion))
     );
+  },
+});
+
+export const deleteDocumentsByIdAfterTimestamp = mutation({
+  args: {
+    id: v.string(),
+    timestamp: v.number(),
+  },
+  handler: async (ctx, args) => {
+    // Delete suggestions first
+    await ctx.db
+      .query("suggestions")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("documentId"), args.id),
+          q.gt(q.field("createdAt"), args.timestamp)
+        )
+      )
+      .collect()
+      .then((suggestions) => suggestions.forEach((s) => ctx.db.delete(s._id)));
+
+    // Then delete documents
+    return await ctx.db
+      .query("documents")
+      .filter((q) =>
+        q.and(q.eq(q.field("_id"), args.id), q.gt(q.field("createdAt"), args.timestamp))
+      )
+      .collect()
+      .then((docs) => docs.forEach((doc) => ctx.db.delete(doc._id)));
   },
 });

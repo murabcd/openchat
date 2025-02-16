@@ -6,9 +6,6 @@ import type { Message } from "ai";
 
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
-
-import { getMessageIdFromAnnotations } from "@/lib/utils";
-
 import { Copy, ThumbsDown, ThumbsUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -53,7 +50,7 @@ export function PureMessageActions({
               variant="outline"
               onClick={async () => {
                 await copyToClipboard(message.content as string);
-                toast.success("Copied to clipboard");
+                toast.success("Copied to clipboard!");
               }}
             >
               <Copy className="w-4 h-4" />
@@ -69,19 +66,20 @@ export function PureMessageActions({
               disabled={vote?.isUpvoted}
               variant="outline"
               onClick={async () => {
-                const messageId = getMessageIdFromAnnotations(message);
-
-                toast.promise(voteMessage({ chatId, messageId, type: "up" }), {
-                  loading: "Upvoting...",
-                  success: "Response upvoted",
-                  error: "Failed to upvote response",
-                });
+                toast.promise(
+                  voteMessage({ chatId, messageId: message.id, type: "up" }),
+                  {
+                    loading: "Upvoting Response...",
+                    success: "Upvoted Response!",
+                    error: "Failed to upvote response.",
+                  }
+                );
               }}
             >
               <ThumbsUp className="w-4 h-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Upvote response</TooltipContent>
+          <TooltipContent>Upvote Response</TooltipContent>
         </Tooltip>
 
         <Tooltip>
@@ -91,19 +89,20 @@ export function PureMessageActions({
               variant="outline"
               disabled={vote && !vote.isUpvoted}
               onClick={async () => {
-                const messageId = getMessageIdFromAnnotations(message);
-
-                toast.promise(voteMessage({ chatId, messageId, type: "down" }), {
-                  loading: "Downvoting...",
-                  success: "Response downvoted",
-                  error: "Failed to downvote response",
-                });
+                toast.promise(
+                  voteMessage({ chatId, messageId: message.id, type: "down" }),
+                  {
+                    loading: "Downvoting Response...",
+                    success: "Downvoted Response!",
+                    error: "Failed to downvote response.",
+                  }
+                );
               }}
             >
               <ThumbsDown className="w-4 h-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Downvote response</TooltipContent>
+          <TooltipContent>Downvote Response</TooltipContent>
         </Tooltip>
       </div>
     </TooltipProvider>

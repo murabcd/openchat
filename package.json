@@ -11,6 +11,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ai-sdk/groq": "^1.1.9",
     "@ai-sdk/openai": "^1.1.9",
     "@auth/core": "0.37.0",
     "@convex-dev/auth": "^0.0.80",
@@ -20,7 +21,7 @@
     "@radix-ui/react-separator": "^1.1.2",
     "@radix-ui/react-slot": "^1.1.2",
     "@radix-ui/react-tooltip": "^1.1.8",
-    "ai": "^4.1.16",
+    "ai": "^4.1.41",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "convex": "^1.19.0",

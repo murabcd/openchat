@@ -10,6 +10,9 @@ import { useParams, useRouter } from "next/navigation";
 import { CircleCheck, Globe, Lock, MoreHorizontal, Share2, Trash } from "lucide-react";
 
 import { toast } from "sonner";
+
+import { useChatVisibility } from "@/hooks/use-chat-visibility";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,11 +32,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { useChatVisibility } from "@/hooks/use-chat-visibility";
 
-import { useMutation, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { Doc } from "@/convex/_generated/dataModel";
 import { VisibilityType } from "@/components/visibility-selector";
 import {
   AlertDialog,
@@ -45,6 +44,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Doc } from "@/convex/_generated/dataModel";
 
 type Chat = {
   id: string;
@@ -178,7 +181,7 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
     });
   };
 
-  const chats = useQuery(api.chats.listChats);
+  const chats = useQuery(api.chats.listChats, user ? { userId: user._id } : "skip");
   const history = useMemo(() => {
     return chats?.map((chat) => ({
       id: chat.chatId,
