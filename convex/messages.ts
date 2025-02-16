@@ -4,8 +4,6 @@ import { v } from "convex/values";
 export const deleteTrailingMessages = mutation({
   args: { messageId: v.string() },
   handler: async (ctx, { messageId }) => {
-    console.log("Server: Starting deletion for messageId:", messageId);
-
     // Get the target message first
     const message = await ctx.db
       .query("messages")
@@ -14,15 +12,8 @@ export const deleteTrailingMessages = mutation({
       .first();
 
     if (!message) {
-      console.error("Server: Message not found for ID:", messageId);
       throw new Error(`Message not found with id: ${messageId}`);
     }
-
-    console.log("Server: Found message to delete:", {
-      id: message.id,
-      chatId: message.chatId,
-      createdAt: message.createdAt,
-    });
 
     // Get all messages after this one in the chat
     const messagesToDelete = await ctx.db
@@ -35,8 +26,6 @@ export const deleteTrailingMessages = mutation({
         )
       )
       .collect();
-
-    console.log("Server: Messages to delete:", messagesToDelete.length);
 
     // Delete votes first
     for (const msg of messagesToDelete) {
@@ -89,11 +78,6 @@ export const saveMessages = mutation({
       (msg) => !existingMessages.some((existing) => existing.id === msg.id)
     );
 
-    console.log(
-      "Server: Saving new messages:",
-      messagesToInsert.map((m) => m.id)
-    );
-
     if (messagesToInsert.length > 0) {
       return await Promise.all(
         messagesToInsert.map((message) => ctx.db.insert("messages", message))
@@ -106,24 +90,12 @@ export const saveMessages = mutation({
 export const getMessagesByChatId = query({
   args: { chatId: v.string() },
   handler: async (ctx, args) => {
-    console.log("Server: Fetching messages for chatId:", args.chatId);
-
     const messages = await ctx.db
       .query("messages")
       .withIndex("by_chat")
       .filter((q) => q.eq(q.field("chatId"), args.chatId))
       .order("asc")
       .collect();
-
-    console.log(
-      "Server: Found messages:",
-      messages.map((m) => ({
-        id: m.id,
-        chatId: m.chatId,
-        role: m.role,
-        content: m.content.slice(0, 50) + "...",
-      }))
-    );
 
     return messages;
   },

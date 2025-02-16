@@ -34,14 +34,7 @@ export function MessageEditor({
     }
   }, []);
 
-  useEffect(() => {
-    // Log the initial message to see what ID we're getting
-    console.log("Editor: Initial message:", {
-      id: message.id,
-      role: message.role,
-      content: message.content.slice(0, 50) + "...",
-    });
-  }, [message]);
+  useEffect(() => {}, [message]);
 
   const adjustHeight = () => {
     if (textareaRef.current) {
@@ -65,25 +58,9 @@ export function MessageEditor({
       return;
     }
 
-    console.log("Editor: Attempting to edit message:", {
-      messageId,
-      role: message.role,
-      originalContent: message.content.slice(0, 50) + "...",
-      newContent: draftContent.slice(0, 50) + "...",
-    });
-
     try {
       setMessages((messages) => {
         const index = messages.findIndex((m) => m.id === message.id);
-        console.log(
-          "Editor: Current messages in state:",
-          messages.map((m) => ({
-            id: m.id,
-            role: m.role,
-            content: m.content.slice(0, 50) + "...",
-          }))
-        );
-        console.log("Editor: Found message at index:", index);
 
         if (index !== -1) {
           const updatedMessage = {
@@ -95,7 +72,6 @@ export function MessageEditor({
         return messages;
       });
 
-      console.log("Editor: Calling deleteTrailingMessages with ID:", messageId);
       await deleteTrailingMessages({ messageId });
 
       setMode("view");

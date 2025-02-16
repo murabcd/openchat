@@ -30,15 +30,6 @@ export async function POST(request: Request) {
   }: { id: string; messages: Array<Message>; selectedChatModel: string } =
     await request.json();
 
-  // Log the incoming message IDs
-  console.log(
-    "API: Received messages with IDs:",
-    messages.map((m) => ({
-      id: m.id,
-      role: m.role,
-    }))
-  );
-
   const token = await convexAuthNextjsToken().catch(() => null);
   const user = token
     ? await fetchQuery(api.users.getUser, {}, { token }).catch(() => null)

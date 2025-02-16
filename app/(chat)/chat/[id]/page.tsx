@@ -40,10 +40,6 @@ export default async function ChatPage(props: { params: Promise<{ id: string }> 
 
   const cookieStore = await cookies();
   const chatModelFromCookie = cookieStore.get("chat-model");
-  console.log("Chat model:", {
-    fromCookie: chatModelFromCookie?.value,
-    default: DEFAULT_CHAT_MODEL,
-  });
 
   const chatComponent = (selectedModel: string) => (
     <Chat
