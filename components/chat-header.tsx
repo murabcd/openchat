@@ -70,10 +70,7 @@ function PureChatHeader({
       )}
 
       <Unauthenticated>
-        <Button
-          className="hidden md:flex py-1.5 px-2 h-fit md:h-[34px] order-4 md:ml-auto"
-          asChild
-        >
+        <Button className="flex md:h-[34px] order-4 md:ml-auto" asChild>
           <Link href="/register">Sign up</Link>
         </Button>
       </Unauthenticated>
