@@ -1,11 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useAuthActions } from "@convex-dev/auth/react";
+
 import { LoaderCircle } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
+
 import { cn } from "@/lib/utils";
+
+import { useAuthActions } from "@convex-dev/auth/react";
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {
   type: "login" | "register";
