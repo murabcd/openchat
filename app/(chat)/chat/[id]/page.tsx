@@ -1,14 +1,14 @@
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 
+import { convertToUIMessages } from "@/lib/utils";
+import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
+
+import { Chat } from "@/components/chat";
+
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
-
-import { Chat } from "@/components/chat";
-import { convertToUIMessages } from "@/lib/utils";
-
-import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 
 export default async function ChatPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;

@@ -59,13 +59,10 @@ export async function POST(request: Request) {
   await convex.mutation(api.messages.saveMessages, {
     messages: [
       {
-        id: userMessage.id,
+        messageId: userMessage.id,
         chatId: id,
         role: userMessage.role as "user" | "assistant",
         content: userMessage.content,
-        userId: user._id,
-        state: "complete" as const,
-        createdAt: Date.now(),
       },
     ],
   });
@@ -100,13 +97,10 @@ export async function POST(request: Request) {
 
               await convex.mutation(api.messages.saveMessages, {
                 messages: sanitizedResponseMessages.map((message) => ({
-                  id: message.id,
+                  messageId: message.id,
                   chatId: id,
                   role: message.role as "user" | "assistant",
                   content: message.content,
-                  userId: user._id,
-                  state: "complete" as const,
-                  createdAt: Date.now(),
                 })),
               });
             } catch (error) {

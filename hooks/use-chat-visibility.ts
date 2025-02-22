@@ -13,7 +13,7 @@ export function useChatVisibility({
   initialVisibility: VisibilityType;
 }) {
   const chat = useQuery(api.chats.getChatById, { chatId });
-  const updateVisibility = useMutation(api.chats.updateChatVisibility);
+  const updateVisibility = useMutation(api.chats.updateChatVisiblityById);
 
   const visibilityType = useMemo(() => {
     return chat?.visibility ?? initialVisibility;

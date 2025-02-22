@@ -13,46 +13,46 @@ export default defineSchema({
 
   chats: defineTable({
     title: v.string(),
+    visibility: v.union(v.literal("private"), v.literal("public")),
     chatId: v.string(),
     userId: v.id("users"),
-    visibility: v.union(v.literal("private"), v.literal("public")),
-    createdAt: v.number(),
-  }).index("by_chatId", ["chatId"]),
+  }).index("by_userId", ["userId"]),
 
   messages: defineTable({
     content: v.any(),
     role: v.union(v.literal("user"), v.literal("assistant"), v.literal("tool")),
-    id: v.string(),
     chatId: v.string(),
-    userId: v.id("users"),
-    state: v.union(v.literal("complete"), v.literal("in_progress")),
-    createdAt: v.number(),
-  })
-    .index("by_chat", ["chatId"])
-    .index("by_createdAt", ["createdAt"])
-    .index("by_message_id", ["id"]),
+    messageId: v.string(),
+  }).index("by_chatId", ["chatId"]),
 
   documents: defineTable({
     title: v.string(),
-    kind: v.union(v.literal("text"), v.literal("code")),
-    content: v.string(),
+    content: v.optional(v.string()),
+    kind: v.union(
+      v.literal("text"),
+      v.literal("code"),
+      v.literal("image"),
+      v.literal("sheet")
+    ),
+    documentId: v.string(),
     userId: v.id("users"),
-    createdAt: v.number(),
   }).index("by_userId", ["userId"]),
 
   suggestions: defineTable({
-    documentId: v.string(),
     originalText: v.string(),
     suggestedText: v.string(),
-    description: v.string(),
+    description: v.optional(v.string()),
     isResolved: v.boolean(),
+    documentId: v.string(),
+    suggestionId: v.string(),
     userId: v.id("users"),
-    createdAt: v.number(),
-  }).index("by_documentId", ["documentId"]),
+  })
+    .index("by_documentId", ["documentId"])
+    .index("by_userId", ["userId"]),
 
   votes: defineTable({
     chatId: v.string(),
     messageId: v.string(),
     isUpvoted: v.boolean(),
-  }).index("by_message", ["messageId"]),
+  }).index("by_messageId", ["messageId"]),
 });

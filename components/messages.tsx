@@ -8,11 +8,9 @@ import { Overview } from "@/components/overview";
 
 import equal from "fast-deep-equal";
 
-import { Id } from "@/convex/_generated/dataModel";
+import { Doc } from "@/convex/_generated/dataModel";
 
 type Vote = {
-  _id: Id<"votes">;
-  _creationTime: number;
   chatId: string;
   messageId: string;
   isUpvoted: boolean;

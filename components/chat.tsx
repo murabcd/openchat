@@ -1,19 +1,21 @@
 "use client";
 
-import type { Attachment, Message } from "ai";
-import { useChat } from "@ai-sdk/react";
 import { useState } from "react";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { Doc } from "@/convex/_generated/dataModel";
+import type { Attachment, Message } from "ai";
+import { useChat } from "@ai-sdk/react";
 
-import { ChatHeader } from "./chat-header";
+import { generateUUID } from "@/lib/utils";
+
+import { toast } from "sonner";
+
+import { ChatHeader } from "@/components/chat-header";
 import { Messages } from "@/components/messages";
 import { MultiModalInput } from "@/components/multi-modal-input";
 import type { VisibilityType } from "@/components/visibility-selector";
-import { generateUUID } from "@/lib/utils";
-import { toast } from "sonner";
+
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 interface ChatProps {
   id: string;

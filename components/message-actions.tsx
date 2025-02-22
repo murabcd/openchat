@@ -5,7 +5,9 @@ import { memo } from "react";
 import type { Message } from "ai";
 
 import { toast } from "sonner";
+
 import { useCopyToClipboard } from "usehooks-ts";
+
 import { Copy, ThumbsDown, ThumbsUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -20,7 +22,12 @@ import equal from "fast-deep-equal";
 
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import type { Doc } from "@/convex/_generated/dataModel";
+
+type Vote = {
+  chatId: string;
+  messageId: string;
+  isUpvoted: boolean;
+};
 
 export function PureMessageActions({
   chatId,
@@ -30,7 +37,7 @@ export function PureMessageActions({
 }: {
   chatId: string;
   message: Message;
-  vote: Doc<"votes"> | undefined;
+  vote: Vote | undefined;
   isLoading: boolean;
 }) {
   const [_, copyToClipboard] = useCopyToClipboard();
@@ -50,7 +57,7 @@ export function PureMessageActions({
               variant="outline"
               onClick={async () => {
                 await copyToClipboard(message.content as string);
-                toast.success("Copied to clipboard!");
+                toast.success("Copied to clipboard");
               }}
             >
               <Copy className="w-4 h-4" />
@@ -69,9 +76,9 @@ export function PureMessageActions({
                 toast.promise(
                   voteMessage({ chatId, messageId: message.id, type: "up" }),
                   {
-                    loading: "Upvoting Response...",
-                    success: "Upvoted Response!",
-                    error: "Failed to upvote response.",
+                    loading: "Upvoting...",
+                    success: "Upvoted response",
+                    error: "Failed to upvote response",
                   }
                 );
               }}
@@ -92,9 +99,9 @@ export function PureMessageActions({
                 toast.promise(
                   voteMessage({ chatId, messageId: message.id, type: "down" }),
                   {
-                    loading: "Downvoting Response...",
-                    success: "Downvoted Response!",
-                    error: "Failed to downvote response.",
+                    loading: "Downvoting...",
+                    success: "Downvoted response",
+                    error: "Failed to downvote response",
                   }
                 );
               }}

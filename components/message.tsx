@@ -22,6 +22,12 @@ import equal from "fast-deep-equal";
 
 import type { Doc } from "@/convex/_generated/dataModel";
 
+type Vote = {
+  chatId: string;
+  messageId: string;
+  isUpvoted: boolean;
+};
+
 const PurePreviewMessage = ({
   chatId,
   message,
@@ -33,7 +39,7 @@ const PurePreviewMessage = ({
 }: {
   chatId: string;
   message: Message;
-  vote: Doc<"votes"> | undefined;
+  vote: Vote | undefined;
   isLoading: boolean;
   setMessages: (messages: Message[] | ((messages: Message[]) => Message[])) => void;
   reload: (chatRequestOptions?: ChatRequestOptions) => Promise<string | null | undefined>;

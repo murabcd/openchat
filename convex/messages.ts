@@ -4,37 +4,29 @@ import { v } from "convex/values";
 export const deleteTrailingMessages = mutation({
   args: { messageId: v.string() },
   handler: async (ctx, { messageId }) => {
-    // Get the target message first
     const message = await ctx.db
       .query("messages")
-      .withIndex("by_message_id")
-      .filter((q) => q.eq(q.field("id"), messageId))
+      .filter((q) => q.eq(q.field("messageId"), messageId))
       .first();
 
     if (!message) {
       throw new Error(`Message not found with id: ${messageId}`);
     }
 
-    // Get all messages after this one in the chat
     const messagesToDelete = await ctx.db
       .query("messages")
-      .withIndex("by_chat")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("chatId"), message.chatId),
-          q.gte(q.field("createdAt"), message.createdAt)
-        )
-      )
+      .withIndex("by_chatId", (q) => q.eq("chatId", message.chatId))
+      .filter((q) => q.gte(q.field("_creationTime"), message._creationTime))
       .collect();
 
-    // Delete votes first
     for (const msg of messagesToDelete) {
       const votes = await ctx.db
         .query("votes")
+        .withIndex("by_messageId")
         .filter((q) =>
           q.and(
             q.eq(q.field("chatId"), message.chatId),
-            q.eq(q.field("messageId"), msg.id)
+            q.eq(q.field("messageId"), msg.messageId)
           )
         )
         .collect();
@@ -44,7 +36,6 @@ export const deleteTrailingMessages = mutation({
       }
     }
 
-    // Then delete messages
     await Promise.all(messagesToDelete.map((msg) => ctx.db.delete(msg._id)));
 
     return { success: true };
@@ -55,27 +46,23 @@ export const saveMessages = mutation({
   args: {
     messages: v.array(
       v.object({
-        id: v.string(),
+        messageId: v.string(),
         chatId: v.string(),
-        role: v.union(v.literal("user"), v.literal("assistant")),
-        content: v.string(),
-        userId: v.id("users"),
-        state: v.union(v.literal("complete"), v.literal("in_progress")),
-        createdAt: v.number(),
+        role: v.union(v.literal("user"), v.literal("assistant"), v.literal("tool")),
+        content: v.any(),
       })
     ),
   },
   handler: async (ctx, args) => {
-    // Check for existing messages first
     const existingMessages = await ctx.db
       .query("messages")
-      .withIndex("by_message_id")
-      .filter((q) => q.or(...args.messages.map((msg) => q.eq(q.field("id"), msg.id))))
+      .filter((q) =>
+        q.or(...args.messages.map((msg) => q.eq(q.field("messageId"), msg.messageId)))
+      )
       .collect();
 
-    // Only insert messages that don't already exist
     const messagesToInsert = args.messages.filter(
-      (msg) => !existingMessages.some((existing) => existing.id === msg.id)
+      (msg) => !existingMessages.some((existing) => existing.messageId === msg.messageId)
     );
 
     if (messagesToInsert.length > 0) {
@@ -90,13 +77,11 @@ export const saveMessages = mutation({
 export const getMessagesByChatId = query({
   args: { chatId: v.string() },
   handler: async (ctx, args) => {
-    const messages = await ctx.db
+    return await ctx.db
       .query("messages")
-      .withIndex("by_chat")
+      .withIndex("by_chatId")
       .filter((q) => q.eq(q.field("chatId"), args.chatId))
       .order("asc")
       .collect();
-
-    return messages;
   },
 });

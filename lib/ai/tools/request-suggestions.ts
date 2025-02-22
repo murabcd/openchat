@@ -11,14 +11,13 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 
 type Suggestion = {
-  id: string;
-  documentId: string;
   originalText: string;
   suggestedText: string;
   description: string;
   isResolved: boolean;
   userId: Doc<"users">["_id"];
-  createdAt: number;
+  documentId: string;
+  suggestionId: string;
 };
 
 interface RequestSuggestionsProps {
@@ -36,7 +35,7 @@ export const requestSuggestions = ({ user, dataStream }: RequestSuggestionsProps
     }),
     execute: async ({ documentId }) => {
       const document = await convex.query(api.documents.getDocumentById, {
-        id: documentId,
+        documentId: documentId,
       });
 
       if (!document || !document.content) {
@@ -65,9 +64,10 @@ export const requestSuggestions = ({ user, dataStream }: RequestSuggestionsProps
           originalText: element.originalSentence,
           suggestedText: element.suggestedSentence,
           description: element.description,
-          id: generateUUID(),
-          documentId: documentId,
           isResolved: false,
+          userId: user._id,
+          documentId: documentId,
+          suggestionId: generateUUID(),
         };
 
         dataStream.writeData({
@@ -79,17 +79,16 @@ export const requestSuggestions = ({ user, dataStream }: RequestSuggestionsProps
       }
 
       if (user) {
-        await convex.mutation(api.documents.saveSuggestions, {
+        await convex.mutation(api.suggestions.saveSuggestions, {
           suggestions: suggestions.map((suggestion) => ({
             ...suggestion,
             userId: user._id,
-            createdAt: Date.now(),
           })),
         });
       }
 
       return {
-        id: documentId,
+        documentId: documentId,
         title: document.title,
         kind: document.kind,
         message: "Suggestions have been added to the document",

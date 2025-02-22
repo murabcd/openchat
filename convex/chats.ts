@@ -9,10 +9,7 @@ export const saveChat = mutation({
     visibility: v.union(v.literal("private"), v.literal("public")),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert("chats", {
-      ...args,
-      createdAt: Date.now(),
-    });
+    return await ctx.db.insert("chats", args);
   },
 });
 
@@ -21,7 +18,7 @@ export const listChats = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("chats")
-      .filter((q) => q.eq(q.field("userId"), args.userId))
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
       .order("desc")
       .collect();
   },
@@ -32,7 +29,7 @@ export const getChatById = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("chats")
-      .withIndex("by_chatId", (q) => q.eq("chatId", args.chatId))
+      .filter((q) => q.eq(q.field("chatId"), args.chatId))
       .first();
   },
 });
@@ -42,13 +39,13 @@ export const deleteChatById = mutation({
   handler: async (ctx, args) => {
     const chat = await ctx.db
       .query("chats")
-      .withIndex("by_chatId", (q) => q.eq("chatId", args.id))
+      .filter((q) => q.eq(q.field("chatId"), args.id))
       .first();
     if (!chat) throw new Error("Chat not found");
 
     const messages = await ctx.db
       .query("messages")
-      .withIndex("by_chat", (q) => q.eq("chatId", args.id))
+      .withIndex("by_chatId", (q) => q.eq("chatId", args.id))
       .collect();
 
     const votes = await ctx.db
@@ -73,7 +70,7 @@ export const voteMessage = mutation({
   handler: async (ctx, args) => {
     const existingVote = await ctx.db
       .query("votes")
-      .withIndex("by_message", (q) => q.eq("messageId", args.messageId))
+      .withIndex("by_messageId", (q) => q.eq("messageId", args.messageId))
       .first();
 
     if (existingVote) {
@@ -100,7 +97,7 @@ export const getVotesByChatId = query({
   },
 });
 
-export const updateChatVisibility = mutation({
+export const updateChatVisiblityById = mutation({
   args: {
     chatId: v.string(),
     visibility: v.union(v.literal("private"), v.literal("public")),
@@ -108,7 +105,7 @@ export const updateChatVisibility = mutation({
   handler: async (ctx, args) => {
     const chat = await ctx.db
       .query("chats")
-      .withIndex("by_chatId", (q) => q.eq("chatId", args.chatId))
+      .filter((q) => q.eq(q.field("chatId"), args.chatId))
       .first();
 
     if (!chat) throw new Error("Chat not found");
