@@ -34,8 +34,6 @@ export function MessageEditor({
     }
   }, []);
 
-  useEffect(() => {}, [message]);
-
   const adjustHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -46,54 +44,6 @@ export function MessageEditor({
   const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setDraftContent(event.target.value);
     adjustHeight();
-  };
-
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
-    const messageId = message.id;
-
-    if (!messageId) {
-      toast.error("Message ID not found!");
-      setIsSubmitting(false);
-      return;
-    }
-
-    try {
-      setMessages((messages) => {
-        const index = messages.findIndex((m) => m.id === message.id);
-
-        if (index !== -1) {
-          const updatedMessage = {
-            ...message,
-            content: draftContent,
-          };
-          return [...messages.slice(0, index), updatedMessage];
-        }
-        return messages;
-      });
-
-      await deleteTrailingMessages({ messageId });
-
-      setMode("view");
-      await reload();
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? `Error: ${error.message}`
-          : "Something went wrong, please try again"
-      );
-
-      // Revert the optimistic update on error
-      setMessages((messages) => {
-        const index = messages.findIndex((m) => m.id === message.id);
-        if (index !== -1) {
-          return [...messages.slice(0, index), message];
-        }
-        return messages;
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   return (
@@ -119,7 +69,31 @@ export function MessageEditor({
           variant="default"
           className="h-fit py-2 px-3"
           disabled={isSubmitting}
-          onClick={handleSubmit}
+          onClick={async () => {
+            setIsSubmitting(true);
+
+            await deleteTrailingMessages({
+              messageId: message.id,
+            });
+
+            setMessages((messages) => {
+              const index = messages.findIndex((m) => m.id === message.id);
+
+              if (index !== -1) {
+                const updatedMessage = {
+                  ...message,
+                  content: draftContent,
+                };
+
+                return [...messages.slice(0, index), updatedMessage];
+              }
+
+              return messages;
+            });
+
+            setMode("view");
+            reload();
+          }}
         >
           {isSubmitting ? "Sending..." : "Send"}
         </Button>

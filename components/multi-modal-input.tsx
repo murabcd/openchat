@@ -80,6 +80,13 @@ function PureMultiModalInput({
     }
   };
 
+  const resetHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = "98px";
+    }
+  };
+
   const [localStorageInput, setLocalStorageInput] = useLocalStorage("input", "");
 
   useEffect(() => {
@@ -107,9 +114,7 @@ function PureMultiModalInput({
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
   const submitForm = useCallback(() => {
-    if (chatId) {
-      window.history.replaceState({}, "", `/chat/${chatId}`);
-    }
+    window.history.replaceState({}, "", `/chat/${chatId}`);
 
     handleSubmit(undefined, {
       experimental_attachments: attachments,
@@ -117,6 +122,7 @@ function PureMultiModalInput({
 
     setAttachments([]);
     setLocalStorageInput("");
+    resetHeight();
 
     if (width && width > 768) {
       textareaRef.current?.focus();
@@ -133,20 +139,20 @@ function PureMultiModalInput({
         body: formData,
       });
 
-      if (!response.ok) {
-        const { error } = await response.json();
-        throw new Error(error);
-      }
+      if (response.ok) {
+        const data = await response.json();
+        const { url, pathname, contentType } = data;
 
-      const data = await response.json();
-      return {
-        url: data.url,
-        name: data.name,
-        contentType: data.type,
-      };
+        return {
+          url,
+          name: pathname,
+          contentType: contentType,
+        };
+      }
+      const { error } = await response.json();
+      toast.error(error);
     } catch (error) {
-      console.error("Error uploading file:", error);
-      toast.error("Failed to upload file, please try again");
+      toast.error("Failed to upload file, please try again!");
     }
   };
 
@@ -227,7 +233,7 @@ function PureMultiModalInput({
             event.preventDefault();
 
             if (isLoading) {
-              toast.error("Please wait for the model to finish its response");
+              toast.error("Please wait for the model to finish its response!");
             } else {
               submitForm();
             }
@@ -275,7 +281,7 @@ function PureAttachmentsButton({
       disabled={isLoading}
       variant="ghost"
     >
-      <Paperclip className="h-4 w-4" />
+      <Paperclip className="w-4 h-4" />
     </Button>
   );
 }
@@ -298,7 +304,7 @@ function PureStopButton({
         setMessages((messages) => sanitizeUIMessages(messages));
       }}
     >
-      <StopCircle className="h-4 w-4" />
+      <StopCircle className="w-4 h-4" />
     </Button>
   );
 }
@@ -323,7 +329,7 @@ function PureSendButton({
       }}
       disabled={input.length === 0 || uploadQueue.length > 0}
     >
-      <ArrowUp className="h-4 w-4" />
+      <ArrowUp className="w-4 h-4" />
     </Button>
   );
 }

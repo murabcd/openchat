@@ -1,8 +1,10 @@
 import { cookies } from "next/headers";
 
-import { Chat } from "@/components/chat";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 import { generateUUID } from "@/lib/utils";
+
+import { Chat } from "@/components/chat";
+import { DataStreamHandler } from "@/components/data-stream-handler";
 
 export default async function Page() {
   const id = generateUUID();
@@ -21,6 +23,7 @@ export default async function Page() {
           selectedVisibilityType="private"
           isReadonly={false}
         />
+        <DataStreamHandler id={id} />
       </>
     );
   }
@@ -35,6 +38,7 @@ export default async function Page() {
         selectedVisibilityType="private"
         isReadonly={false}
       />
+      <DataStreamHandler id={id} />
     </>
   );
 }

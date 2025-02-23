@@ -50,18 +50,19 @@ import { api } from "@/convex/_generated/api";
 import { Doc } from "@/convex/_generated/dataModel";
 
 type Chat = {
-  id: string;
   title: string;
-  createdAt: number;
   visibility: VisibilityType;
+  chatId: string;
+  userId: Doc<"users">["_id"];
+  createdAt: number;
 };
 
 type GroupedChats = {
-  today: Array<Chat>;
-  yesterday: Array<Chat>;
-  lastWeek: Array<Chat>;
-  lastMonth: Array<Chat>;
-  older: Array<Chat>;
+  today: Chat[];
+  yesterday: Chat[];
+  lastWeek: Chat[];
+  lastMonth: Chat[];
+  older: Chat[];
 };
 
 const PureChatItem = ({
@@ -76,14 +77,14 @@ const PureChatItem = ({
   setOpenMobile: (open: boolean) => void;
 }) => {
   const { visibilityType, setVisibilityType } = useChatVisibility({
-    chatId: chat.id,
+    chatId: chat.chatId,
     initialVisibility: chat.visibility,
   });
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive}>
-        <Link href={`/chat/${chat.id}`} onClick={() => setOpenMobile(false)}>
+        <Link href={`/chat/${chat.chatId}`} onClick={() => setOpenMobile(false)}>
           <span>{chat.title}</span>
         </Link>
       </SidebarMenuButton>
@@ -141,7 +142,7 @@ const PureChatItem = ({
 
           <DropdownMenuItem
             className="cursor-pointer text-destructive focus:bg-destructive/15 focus:text-destructive dark:text-red-500"
-            onSelect={() => onDelete(chat.id)}
+            onSelect={() => onDelete(chat.chatId)}
           >
             <Trash className="w-4 h-4" />
             <span>Delete</span>
@@ -184,10 +185,11 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
   const chats = useQuery(api.chats.listChats, user ? { userId: user._id } : "skip");
   const history = useMemo(() => {
     return chats?.map((chat) => ({
-      id: chat.chatId,
       title: chat.title,
-      createdAt: chat._creationTime,
       visibility: chat.visibility,
+      createdAt: chat._creationTime,
+      chatId: chat.chatId,
+      userId: chat.userId,
     }));
   }, [chats]);
 
@@ -196,7 +198,7 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
       <SidebarGroup>
         <SidebarGroupContent>
           <div className="px-2 text-zinc-500 w-full flex flex-row justify-center items-center text-sm gap-2">
-            Login to save, share, and revisit previous chats.
+            Login to save and revisit previous chats!
           </div>
         </SidebarGroupContent>
       </SidebarGroup>
@@ -232,21 +234,14 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
       <SidebarGroup>
         <SidebarGroupContent>
           <div className="px-2 text-zinc-500 w-full flex flex-row justify-center items-center text-sm gap-2">
-            Your conversations will appear here once you start chatting.
+            Your conversations will appear here once you start chatting!
           </div>
         </SidebarGroupContent>
       </SidebarGroup>
     );
   }
 
-  const groupChatsByDate = (
-    chats: Array<{
-      id: string;
-      title: string;
-      createdAt: number;
-      visibility: VisibilityType;
-    }>
-  ): GroupedChats => {
+  const groupChatsByDate = (chats: Chat[]): GroupedChats => {
     const now = new Date();
     const oneWeekAgo = subWeeks(now, 1);
     const oneMonthAgo = subMonths(now, 1);
@@ -297,9 +292,9 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
                         </div>
                         {groupedChats.today.map((chat) => (
                           <ChatItem
-                            key={chat.id}
+                            key={chat.chatId}
                             chat={chat}
-                            isActive={chat.id === id}
+                            isActive={chat.chatId === id}
                             onDelete={(chatId) => {
                               setDeleteId(chatId);
                               setShowDeleteDialog(true);
@@ -317,9 +312,9 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
                         </div>
                         {groupedChats.yesterday.map((chat) => (
                           <ChatItem
-                            key={chat.id}
+                            key={chat.chatId}
                             chat={chat}
-                            isActive={chat.id === id}
+                            isActive={chat.chatId === id}
                             onDelete={(chatId) => {
                               setDeleteId(chatId);
                               setShowDeleteDialog(true);
@@ -337,9 +332,9 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
                         </div>
                         {groupedChats.lastWeek.map((chat) => (
                           <ChatItem
-                            key={chat.id}
+                            key={chat.chatId}
                             chat={chat}
-                            isActive={chat.id === id}
+                            isActive={chat.chatId === id}
                             onDelete={(chatId) => {
                               setDeleteId(chatId);
                               setShowDeleteDialog(true);
@@ -357,9 +352,9 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
                         </div>
                         {groupedChats.lastMonth.map((chat) => (
                           <ChatItem
-                            key={chat.id}
+                            key={chat.chatId}
                             chat={chat}
-                            isActive={chat.id === id}
+                            isActive={chat.chatId === id}
                             onDelete={(chatId) => {
                               setDeleteId(chatId);
                               setShowDeleteDialog(true);
@@ -377,9 +372,9 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
                         </div>
                         {groupedChats.older.map((chat) => (
                           <ChatItem
-                            key={chat.id}
+                            key={chat.chatId}
                             chat={chat}
-                            isActive={chat.id === id}
+                            isActive={chat.chatId === id}
                             onDelete={(chatId) => {
                               setDeleteId(chatId);
                               setShowDeleteDialog(true);
@@ -395,7 +390,6 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
-
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>

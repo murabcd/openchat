@@ -1,6 +1,13 @@
 "use client";
 
 import { ReactNode, useMemo, useState } from "react";
+
+import { cn } from "@/lib/utils";
+
+import { CircleCheck, ChevronDown, Globe, Lock } from "lucide-react";
+
+import { useChatVisibility } from "@/hooks/use-chat-visibility";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -8,10 +15,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
-
-import { CircleCheck, ChevronDown, Globe, Lock } from "lucide-react";
-import { useChatVisibility } from "@/hooks/use-chat-visibility";
 
 export type VisibilityType = "private" | "public";
 
@@ -37,13 +40,14 @@ const visibilities: Array<{
 
 export function VisibilitySelector({
   chatId,
-  selectedVisibilityType,
   className,
+  selectedVisibilityType,
 }: {
   chatId: string;
   selectedVisibilityType: VisibilityType;
 } & React.ComponentProps<typeof Button>) {
   const [open, setOpen] = useState(false);
+
   const { visibilityType, setVisibilityType } = useChatVisibility({
     chatId,
     initialVisibility: selectedVisibilityType,

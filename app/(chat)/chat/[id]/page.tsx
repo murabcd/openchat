@@ -5,6 +5,7 @@ import { convertToUIMessages } from "@/lib/utils";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 
 import { Chat } from "@/components/chat";
+import { DataStreamHandler } from "@/components/data-stream-handler";
 
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
@@ -41,19 +42,31 @@ export default async function ChatPage(props: { params: Promise<{ id: string }> 
   const cookieStore = await cookies();
   const chatModelFromCookie = cookieStore.get("chat-model");
 
-  const chatComponent = (selectedModel: string) => (
-    <Chat
-      id={chatId}
-      initialMessages={convertToUIMessages(messagesFromDb)}
-      selectedChatModel={selectedModel}
-      selectedVisibilityType={chat.visibility}
-      isReadonly={user?._id !== chat.userId}
-    />
-  );
-
   if (!chatModelFromCookie) {
-    return chatComponent(DEFAULT_CHAT_MODEL);
+    return (
+      <>
+        <Chat
+          id={chat.chatId}
+          initialMessages={convertToUIMessages(messagesFromDb)}
+          selectedChatModel={DEFAULT_CHAT_MODEL}
+          selectedVisibilityType={chat.visibility}
+          isReadonly={user?._id !== chat.userId}
+        />
+        <DataStreamHandler id={chat.chatId} />
+      </>
+    );
   }
 
-  return chatComponent(chatModelFromCookie.value);
+  return (
+    <>
+      <Chat
+        id={chat.chatId}
+        initialMessages={convertToUIMessages(messagesFromDb)}
+        selectedChatModel={chatModelFromCookie.value}
+        selectedVisibilityType={chat.visibility}
+        isReadonly={user?._id !== chat.userId}
+      />
+      <DataStreamHandler id={chat.chatId} />
+    </>
+  );
 }
