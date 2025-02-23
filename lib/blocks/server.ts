@@ -5,19 +5,18 @@ import { imageDocumentHandler } from "@/blocks/image/server";
 import { sheetDocumentHandler } from "@/blocks/sheet/server";
 import { textDocumentHandler } from "@/blocks/text/server";
 
-import { saveDocument } from "../db/queries";
-import { Session } from "next-auth";
-
 import { BlockKind } from "@/components/block";
+
 import { Doc } from "@/convex/_generated/dataModel";
+import { api } from "@/convex/_generated/api";
+import { ConvexHttpClient } from "convex/browser";
 
 type Document = {
   title: string;
   content: string;
   kind: BlockKind;
   documentId: string;
-  userId: Doc<"users">;
-  createdAt: Doc<"documents">["_creationTime"];
+  userId: Doc<"users">["_id"];
 };
 
 export interface SaveDocumentProps {
@@ -32,14 +31,14 @@ export interface CreateDocumentCallbackProps {
   id: string;
   title: string;
   dataStream: DataStreamWriter;
-  session: Session;
+  user: Doc<"users">["_id"];
 }
 
 export interface UpdateDocumentCallbackProps {
   document: Document;
   description: string;
   dataStream: DataStreamWriter;
-  session: Session;
+  user: Doc<"users">["_id"];
 }
 
 export interface DocumentHandler<T = BlockKind> {
@@ -47,6 +46,8 @@ export interface DocumentHandler<T = BlockKind> {
   onCreateDocument: (args: CreateDocumentCallbackProps) => Promise<void>;
   onUpdateDocument: (args: UpdateDocumentCallbackProps) => Promise<void>;
 }
+
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export function createDocumentHandler<T extends BlockKind>(config: {
   kind: T;
@@ -60,16 +61,16 @@ export function createDocumentHandler<T extends BlockKind>(config: {
         id: args.id,
         title: args.title,
         dataStream: args.dataStream,
-        session: args.session,
+        user: args.user,
       });
 
-      if (args.session?.user?.id) {
-        await saveDocument({
-          id: args.id,
+      if (args.user) {
+        await convex.mutation(api.documents.saveDocument, {
+          documentId: args.id,
           title: args.title,
           content: draftContent,
           kind: config.kind,
-          userId: args.session.user.id,
+          userId: args.user,
         });
       }
 
@@ -80,16 +81,16 @@ export function createDocumentHandler<T extends BlockKind>(config: {
         document: args.document,
         description: args.description,
         dataStream: args.dataStream,
-        session: args.session,
+        user: args.user,
       });
 
-      if (args.session?.user?.id) {
-        await saveDocument({
-          id: args.document.documentId,
+      if (args.user) {
+        await convex.mutation(api.documents.saveDocument, {
+          documentId: args.document.documentId,
           title: args.document.title,
           content: draftContent,
           kind: config.kind,
-          userId: args.session.user.id,
+          userId: args.user,
         });
       }
 

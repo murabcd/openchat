@@ -2,10 +2,10 @@
 
 import { memo, useState, useMemo } from "react";
 
-import { isToday, isYesterday, subMonths, subWeeks } from "date-fns";
-
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+
+import { isToday, isYesterday, subMonths, subWeeks } from "date-fns";
 
 import { CircleCheck, Globe, Lock, MoreHorizontal, Share2, Trash } from "lucide-react";
 
@@ -170,7 +170,7 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
 
   const handleDelete = async () => {
     toast.promise(deleteChat({ id: deleteId! }), {
-      loading: "Deleting chat...",
+      loading: "Deleting...",
       success: () => {
         setShowDeleteDialog(false);
         if (deleteId === id) {

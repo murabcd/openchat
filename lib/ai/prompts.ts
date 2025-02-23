@@ -1,4 +1,4 @@
-// import { BlockKind } from '@/components/block';
+import { BlockKind } from "@/components/block";
 
 export const blocksPrompt = `
 Blocks is a special user interface mode that helps users with writing, editing, and other content creation tasks. When block is open, it is on the right side of the screen, while the conversation is on the left side. When creating or updating documents, changes are reflected in real-time on the blocks and visible to the user.
@@ -74,26 +74,23 @@ export const sheetPrompt = `
 You are a spreadsheet creation assistant. Create a spreadsheet in csv format based on the given prompt. The spreadsheet should contain meaningful column headers and data.
 `;
 
-// export const updateDocumentPrompt = (
-//   currentContent: string | null,
-//   type: BlockKind,
-// ) =>
-//   type === 'text'
-//     ? `\
-// Improve the following contents of the document based on the given prompt.
+export const updateDocumentPrompt = (currentContent: string | null, type: BlockKind) =>
+  type === "text"
+    ? `\
+Improve the following contents of the document based on the given prompt.
 
-// ${currentContent}
-// `
-//     : type === 'code'
-//       ? `\
-// Improve the following code snippet based on the given prompt.
+${currentContent}
+`
+    : type === "code"
+      ? `\
+Improve the following code snippet based on the given prompt.
 
-// ${currentContent}
-// `
-//       : type === 'sheet'
-//         ? `\
-// Improve the following spreadsheet based on the given prompt.
+${currentContent}
+`
+      : type === "sheet"
+        ? `\
+Improve the following spreadsheet based on the given prompt.
 
-// ${currentContent}
-// `
-//         : '';
+${currentContent}
+`
+        : "";

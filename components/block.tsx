@@ -13,10 +13,6 @@ import { formatDistance } from "date-fns";
 
 import { AnimatePresence, motion } from "framer-motion";
 
-import useSWR, { useSWRConfig } from "swr";
-
-import { fetcher } from "@/lib/utils";
-
 import { useDebounceCallback, useWindowSize } from "usehooks-ts";
 import { useBlock } from "@/hooks/use-block";
 
@@ -35,6 +31,8 @@ import { useSidebar } from "@/components/ui/sidebar";
 
 import equal from "fast-deep-equal";
 import { Doc } from "@/convex/_generated/dataModel";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 type Vote = {
   chatId: string;
@@ -42,14 +40,7 @@ type Vote = {
   isUpvoted: boolean;
 };
 
-type Document = {
-  title: string;
-  content: string;
-  kind: BlockKind;
-  documentId: string;
-  userId: Doc<"users">["_id"];
-  createdAt: Doc<"documents">["_creationTime"];
-};
+type Document = Doc<"documents">;
 
 export const blockDefinitions = [textBlock, codeBlock, imageBlock, sheetBlock];
 export type BlockKind = (typeof blockDefinitions)[number]["kind"];
@@ -110,87 +101,49 @@ function PureBlock({
 }) {
   const { block, setBlock, metadata, setMetadata } = useBlock();
 
-  const {
-    data: documents,
-    isLoading: isDocumentsFetching,
-    mutate: mutateDocuments,
-  } = useSWR<Array<Document>>(
+  const documents = useQuery(
+    api.documents.getDocumentById,
     block.documentId !== "init" && block.status !== "streaming"
-      ? `/api/document?id=${block.documentId}`
-      : null,
-    fetcher
+      ? { documentId: block.documentId }
+      : "skip"
   );
 
   const [mode, setMode] = useState<"edit" | "diff">("edit");
   const [document, setDocument] = useState<Document | null>(null);
   const [currentVersionIndex, setCurrentVersionIndex] = useState(-1);
+  const [isContentDirty, setIsContentDirty] = useState(false);
+  const [isToolbarVisible, setIsToolbarVisible] = useState(false);
 
   const { open: isSidebarOpen } = useSidebar();
+  const isDocumentsFetching = documents === undefined;
+
+  const updateDocument = useMutation(api.documents.updateDocument);
 
   useEffect(() => {
-    if (documents && documents.length > 0) {
-      const mostRecentDocument = documents.at(-1);
+    if (documents) {
+      setDocument(documents);
 
-      if (mostRecentDocument) {
-        setDocument(mostRecentDocument);
-        setCurrentVersionIndex(documents.length - 1);
-        setBlock((currentBlock) => ({
-          ...currentBlock,
-          content: mostRecentDocument.content ?? "",
-        }));
-      }
+      setBlock((currentBlock) => ({
+        ...currentBlock,
+        content: documents.content ?? "",
+      }));
     }
   }, [documents, setBlock]);
 
-  useEffect(() => {
-    mutateDocuments();
-  }, [block.status, mutateDocuments]);
-
-  const { mutate } = useSWRConfig();
-  const [isContentDirty, setIsContentDirty] = useState(false);
-
   const handleContentChange = useCallback(
-    (updatedContent: string) => {
-      if (!block) return;
+    async (updatedContent: string) => {
+      if (!block || !document) return;
 
-      mutate<Array<Document>>(
-        `/api/document?id=${block.documentId}`,
-        async (currentDocuments) => {
-          if (!currentDocuments) return undefined;
-
-          const currentDocument = currentDocuments.at(-1);
-
-          if (!currentDocument || !currentDocument.content) {
-            setIsContentDirty(false);
-            return currentDocuments;
-          }
-
-          if (currentDocument.content !== updatedContent) {
-            await fetch(`/api/document?id=${block.documentId}`, {
-              method: "POST",
-              body: JSON.stringify({
-                title: block.title,
-                content: updatedContent,
-                kind: block.kind,
-              }),
-            });
-
-            setIsContentDirty(false);
-
-            const newDocument = {
-              ...currentDocument,
-              content: updatedContent,
-              createdAt: new Date(),
-            };
-
-            return [...currentDocuments, newDocument];
-          }
-          return currentDocuments;
-        },
-        { revalidate: false }
-      );
+      if (document.content !== updatedContent) {
+        await updateDocument({
+          documentId: block.documentId,
+          content: updatedContent,
+          userId: document.userId,
+        });
+        setIsContentDirty(false);
+      }
     },
-    [block, mutate]
+    [block, document, updateDocument]
   );
 
   const debouncedHandleContentChange = useDebounceCallback(handleContentChange, 2000);
@@ -199,7 +152,6 @@ function PureBlock({
     (updatedContent: string, debounce: boolean) => {
       if (document && updatedContent !== document.content) {
         setIsContentDirty(true);
-
         if (debounce) {
           debouncedHandleContentChange(updatedContent);
         } else {
@@ -211,46 +163,17 @@ function PureBlock({
   );
 
   function getDocumentContentById(index: number) {
-    if (!documents) return "";
-    if (!documents[index]) return "";
-    return documents[index].content ?? "";
+    if (!document) return "";
+    return document.content ?? "";
   }
 
   const handleVersionChange = (type: "next" | "prev" | "toggle" | "latest") => {
-    if (!documents) return;
-
-    if (type === "latest") {
-      setCurrentVersionIndex(documents.length - 1);
-      setMode("edit");
-    }
-
     if (type === "toggle") {
       setMode((mode) => (mode === "edit" ? "diff" : "edit"));
     }
-
-    if (type === "prev") {
-      if (currentVersionIndex > 0) {
-        setCurrentVersionIndex((index) => index - 1);
-      }
-    } else if (type === "next") {
-      if (currentVersionIndex < documents.length - 1) {
-        setCurrentVersionIndex((index) => index + 1);
-      }
-    }
   };
 
-  const [isToolbarVisible, setIsToolbarVisible] = useState(false);
-
-  /*
-   * NOTE: if there are no documents, or if
-   * the documents are being fetched, then
-   * we mark it as the current version.
-   */
-
-  const isCurrentVersion =
-    documents && documents.length > 0
-      ? currentVersionIndex === documents.length - 1
-      : true;
+  const isCurrentVersion = true;
 
   const { width: windowWidth, height: windowHeight } = useWindowSize();
   const isMobile = windowWidth ? windowWidth < 768 : false;
@@ -440,7 +363,7 @@ function PureBlock({
                   ) : document ? (
                     <div className="text-sm text-muted-foreground">
                       {`Updated ${formatDistance(
-                        new Date(document.createdAt),
+                        new Date(document._creationTime),
                         new Date(),
                         {
                           addSuffix: true,
@@ -504,7 +427,7 @@ function PureBlock({
               {!isCurrentVersion && (
                 <VersionFooter
                   currentVersionIndex={currentVersionIndex}
-                  documents={documents}
+                  documents={documents ? [documents] : undefined}
                   handleVersionChange={handleVersionChange}
                 />
               )}

@@ -4,9 +4,10 @@ import { memo, MouseEvent, useCallback, useEffect, useMemo, useRef } from "react
 
 import { File, Fullscreen, Image, LoaderCircle } from "lucide-react";
 
-import { cn, fetcher } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
-import useSWR from "swr";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 import { useBlock } from "@/hooks/use-block";
 
@@ -21,14 +22,8 @@ import { InlineDocumentSkeleton } from "@/components/document-skeleton";
 import equal from "fast-deep-equal";
 
 import { Doc } from "@/convex/_generated/dataModel";
-type Document = {
-  title: string;
-  content: string;
-  kind: BlockKind;
-  documentId: string;
-  userId: Doc<"users">["_id"];
-  createdAt: Doc<"documents">["_creationTime"];
-};
+
+type Document = Doc<"documents">;
 
 interface DocumentPreviewProps {
   isReadonly: boolean;
@@ -39,12 +34,14 @@ interface DocumentPreviewProps {
 export function DocumentPreview({ isReadonly, result, args }: DocumentPreviewProps) {
   const { block, setBlock } = useBlock();
 
-  const { data: documents, isLoading: isDocumentsFetching } = useSWR<Array<Document>>(
-    result ? `/api/document?id=${result.id}` : null,
-    fetcher
+  const documents = useQuery(
+    api.documents.getDocumentById,
+    result ? { documentId: result.id } : "skip"
   );
 
-  const previewDocument = useMemo(() => documents?.[0], [documents]);
+  const isDocumentsFetching = documents === undefined;
+
+  const previewDocument = useMemo(() => documents, [documents]);
   const hitboxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -86,19 +83,20 @@ export function DocumentPreview({ isReadonly, result, args }: DocumentPreviewPro
   }
 
   if (isDocumentsFetching) {
-    return <LoadingSkeleton blockKind={result.kind ?? args.kind} />;
+    return <LoadingSkeleton blockKind={result?.kind ?? args?.kind ?? block.kind} />;
   }
 
   const document: Document | null = previewDocument
     ? previewDocument
     : block.status === "streaming"
       ? {
-          id: block.documentId,
+          _id: block.documentId as any,
+          _creationTime: Date.now(),
+          documentId: block.documentId,
           title: block.title,
           kind: block.kind,
           content: block.content,
-          createdAt: new Date(),
-          userId: "noop",
+          userId: "noop" as any,
         }
       : null;
 
@@ -147,7 +145,7 @@ const PureHitboxLayer = ({
   result,
   setBlock,
 }: {
-  hitboxRef: React.RefObject<HTMLDivElement>;
+  hitboxRef: React.RefObject<HTMLDivElement | null>;
   result: any;
   setBlock: (updaterFn: UIBlock | ((currentBlock: UIBlock) => UIBlock)) => void;
 }) => {

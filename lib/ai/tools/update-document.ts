@@ -2,6 +2,8 @@ import { DataStreamWriter, tool } from "ai";
 
 import { z } from "zod";
 
+import { documentHandlersByBlockKind } from "@/lib/blocks/server";
+
 import { Doc } from "@/convex/_generated/dataModel";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
@@ -21,7 +23,9 @@ export const updateDocument = ({ user, dataStream }: UpdateDocumentProps) =>
       description: z.string().describe("The description of changes that need to be made"),
     }),
     execute: async ({ id, description }) => {
-      const document = await convex.query(api.documents.getDocumentById, { id });
+      const document = await convex.query(api.documents.getDocumentById, {
+        documentId: id,
+      });
 
       if (!document) {
         return {
@@ -34,21 +38,20 @@ export const updateDocument = ({ user, dataStream }: UpdateDocumentProps) =>
         content: document.title,
       });
 
-      // const documentHandler = documentHandlersByBlockKind.find(
-      //   (documentHandlerByBlockKind) =>
-      //     documentHandlerByBlockKind.kind === document.kind,
-      // );
+      const documentHandler = documentHandlersByBlockKind.find(
+        (documentHandlerByBlockKind) => documentHandlerByBlockKind.kind === document.kind
+      );
 
-      // if (!documentHandler) {
-      //   throw new Error(`No document handler found for kind: ${document.kind}`);
-      // }
+      if (!documentHandler) {
+        throw new Error(`No document handler found for kind: ${document.kind}`);
+      }
 
-      // await documentHandler.onUpdateDocument({
-      //   document,
-      //   description,
-      //   dataStream,
-      //   userId: user._id,
-      // });
+      await documentHandler.onUpdateDocument({
+        document,
+        description,
+        dataStream,
+        user: user._id,
+      });
 
       dataStream.writeData({ type: "finish", content: "" });
 

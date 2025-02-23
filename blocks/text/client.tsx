@@ -1,6 +1,6 @@
 import { Clock, Copy, MessageCircle, Pen, Redo, Undo } from "lucide-react";
 
-import { getSuggestions } from "../actions";
+import { getSuggestions } from "@/lib/ai/utils";
 
 import { toast } from "sonner";
 
@@ -32,7 +32,7 @@ export const textBlock = new Block<"text", TextBlockMetadata>({
     const suggestions = await getSuggestions({ documentId });
 
     setMetadata({
-      suggestions,
+      suggestions: suggestions as Suggestion[],
     });
   },
   onStreamPart: ({ streamPart, setMetadata, setBlock }) => {

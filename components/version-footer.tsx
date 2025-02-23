@@ -2,21 +2,23 @@
 
 import { useState } from "react";
 
-import { isAfter } from "date-fns";
-
 import { motion } from "framer-motion";
 
-import { useSWRConfig } from "swr";
-
 import { useWindowSize } from "usehooks-ts";
+
 import { useBlock } from "@/hooks/use-block";
 
-import type { Document } from "@/lib/db/schema";
 import { getDocumentTimestampByIndex } from "@/lib/utils";
 
 import { LoaderCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+
+import { Doc } from "@/convex/_generated/dataModel";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
+type Document = Doc<"documents">;
 
 interface VersionFooterProps {
   handleVersionChange: (type: "next" | "prev" | "toggle" | "latest") => void;
@@ -30,12 +32,11 @@ export const VersionFooter = ({
   currentVersionIndex,
 }: VersionFooterProps) => {
   const { block } = useBlock();
-
   const { width } = useWindowSize();
   const isMobile = width < 768;
-
-  const { mutate } = useSWRConfig();
   const [isMutating, setIsMutating] = useState(false);
+
+  const deleteDocuments = useMutation(api.documents.deleteDocumentsByIdAfterTimestamp);
 
   if (!documents) return;
 
@@ -59,30 +60,16 @@ export const VersionFooter = ({
           disabled={isMutating}
           onClick={async () => {
             setIsMutating(true);
-
-            mutate(
-              `/api/document?id=${block.documentId}`,
-              await fetch(`/api/document?id=${block.documentId}`, {
-                method: "PATCH",
-                body: JSON.stringify({
-                  timestamp: getDocumentTimestampByIndex(documents, currentVersionIndex),
-                }),
-              }),
-              {
-                optimisticData: documents
-                  ? [
-                      ...documents.filter((document) =>
-                        isAfter(
-                          new Date(document.createdAt),
-                          new Date(
-                            getDocumentTimestampByIndex(documents, currentVersionIndex)
-                          )
-                        )
-                      ),
-                    ]
-                  : [],
-              }
-            );
+            try {
+              await deleteDocuments({
+                documentId: block.documentId,
+                timestamp: new Date(
+                  getDocumentTimestampByIndex(documents, currentVersionIndex)
+                ).getTime(),
+              });
+            } finally {
+              setIsMutating(false);
+            }
           }}
         >
           <div>Restore this version</div>

@@ -29,6 +29,10 @@ import { SuggestedActions } from "@/components/suggested-actions";
 
 import equal from "fast-deep-equal";
 
+// Add imports
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
 function PureMultiModalInput({
   chatId,
   input,
@@ -129,30 +133,36 @@ function PureMultiModalInput({
     }
   }, [attachments, handleSubmit, setAttachments, setLocalStorageInput, width, chatId]);
 
-  const uploadFile = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
+  const generateAttachmentUrl = useMutation(api.files.generateAttachmentUrl);
+  const getAttachmentUrl = useMutation(api.files.getAttachmentUrl);
 
+  const uploadFile = async (file: File) => {
     try {
-      const response = await fetch("/api/files/upload", {
-        method: "POST",
-        body: formData,
+      const postUrl = await generateAttachmentUrl({
+        contentType: file.type,
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        const { url, pathname, contentType } = data;
+      const uploadResponse = await fetch(postUrl, {
+        method: "POST",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      const { storageId } = await uploadResponse.json();
 
-        return {
-          url,
-          name: pathname,
-          contentType: contentType,
-        };
-      }
-      const { error } = await response.json();
-      toast.error(error);
+      const fileData = await getAttachmentUrl({
+        storageId,
+        name: file.name,
+        contentType: file.type,
+      });
+
+      return {
+        url: fileData.url,
+        name: fileData.name,
+        contentType: fileData.type,
+      };
     } catch (error) {
-      toast.error("Failed to upload file, please try again!");
+      toast.error("Failed to upload file, please try again");
+      return undefined;
     }
   };
 
@@ -268,7 +278,7 @@ function PureAttachmentsButton({
   fileInputRef,
   isLoading,
 }: {
-  fileInputRef: React.MutableRefObject<HTMLInputElement | null>;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
   isLoading: boolean;
 }) {
   return (

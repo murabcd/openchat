@@ -54,8 +54,11 @@ export const Chat = ({
     experimental_throttle: 100,
     sendExtraMessageFields: true,
     generateId: generateUUID,
+    onFinish: () => {
+      // Could add Convex mutation here if needed
+    },
     onError: (error) => {
-      toast.error("An error occured, please try again!");
+      toast.error("An error occured, please try again");
     },
   });
 

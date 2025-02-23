@@ -11,7 +11,7 @@ export const saveDocument = mutation({
       v.literal("image"),
       v.literal("sheet")
     ),
-    content: v.optional(v.string()),
+    content: v.string(),
     userId: v.id("users"),
   },
   handler: async (ctx, args) => {

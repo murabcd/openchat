@@ -6,9 +6,21 @@ import type { Message } from "ai";
 
 import { cookies } from "next/headers";
 
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "@/convex/_generated/api";
+
 export async function saveChatModelAsCookie(model: string) {
   const cookieStore = await cookies();
   cookieStore.set("chat-model", model);
+}
+
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
+export async function getSuggestions({ documentId }: { documentId: string }) {
+  const suggestions = await convex.query(api.suggestions.getSuggestionsByDocumentId, {
+    documentId,
+  });
+  return suggestions ?? [];
 }
 
 export async function generateTitleFromUserMessage({ message }: { message: Message }) {

@@ -1,10 +1,8 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-
-import useSWR from "swr";
-
 import { UIBlock } from "@/components/block";
+import { useLocalStorage } from "usehooks-ts";
 
 export const initialBlockData: UIBlock = {
   documentId: "init",
@@ -24,49 +22,27 @@ export const initialBlockData: UIBlock = {
 type Selector<T> = (state: UIBlock) => T;
 
 export function useBlockSelector<Selected>(selector: Selector<Selected>) {
-  const { data: localBlock } = useSWR<UIBlock>("block", null, {
-    fallbackData: initialBlockData,
-  });
-
-  const selectedValue = useMemo(() => {
-    if (!localBlock) return selector(initialBlockData);
-    return selector(localBlock);
-  }, [localBlock, selector]);
-
-  return selectedValue;
+  const [localBlock] = useLocalStorage<UIBlock>("block", initialBlockData);
+  return useMemo(() => selector(localBlock ?? initialBlockData), [localBlock, selector]);
 }
 
 export function useBlock() {
-  const { data: localBlock, mutate: setLocalBlock } = useSWR<UIBlock>("block", null, {
-    fallbackData: initialBlockData,
-  });
+  const [localBlock, setLocalBlock] = useLocalStorage<UIBlock>("block", initialBlockData);
+  const [localBlockMetadata, setLocalBlockMetadata] = useLocalStorage<any>(
+    "block-metadata",
+    null
+  );
 
-  const block = useMemo(() => {
-    if (!localBlock) return initialBlockData;
-    return localBlock;
-  }, [localBlock]);
+  const block = useMemo(() => localBlock ?? initialBlockData, [localBlock]);
 
   const setBlock = useCallback(
     (updaterFn: UIBlock | ((currentBlock: UIBlock) => UIBlock)) => {
       setLocalBlock((currentBlock) => {
-        const blockToUpdate = currentBlock || initialBlockData;
-
-        if (typeof updaterFn === "function") {
-          return updaterFn(blockToUpdate);
-        }
-
-        return updaterFn;
+        const blockToUpdate = currentBlock ?? initialBlockData;
+        return typeof updaterFn === "function" ? updaterFn(blockToUpdate) : updaterFn;
       });
     },
     [setLocalBlock]
-  );
-
-  const { data: localBlockMetadata, mutate: setLocalBlockMetadata } = useSWR<any>(
-    () => (block.documentId ? `block-metadata-${block.documentId}` : null),
-    null,
-    {
-      fallbackData: null,
-    }
   );
 
   return useMemo(

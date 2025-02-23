@@ -27,7 +27,7 @@ export default defineSchema({
 
   documents: defineTable({
     title: v.string(),
-    content: v.optional(v.string()),
+    content: v.string(),
     kind: v.union(
       v.literal("text"),
       v.literal("code"),

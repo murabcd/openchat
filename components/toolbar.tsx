@@ -8,6 +8,7 @@ import {
   useEffect,
   useRef,
   useState,
+  RefObject,
 } from "react";
 
 import type { ChatRequestOptions, CreateMessage, Message } from "ai";
@@ -336,8 +337,8 @@ const PureToolbar = ({
   setMessages: Dispatch<SetStateAction<Message[]>>;
   blockKind: BlockKind;
 }) => {
-  const toolbarRef = useRef<HTMLDivElement>(null);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const toolbarRef = useRef<HTMLDivElement>(null) as RefObject<HTMLDivElement>;
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);

@@ -1,6 +1,7 @@
 import type { Node } from "prosemirror-model";
 import { Plugin, PluginKey } from "prosemirror-state";
 import { type Decoration, DecorationSet, type EditorView } from "prosemirror-view";
+
 import { createRoot } from "react-dom/client";
 
 import { Suggestion as PreviewSuggestion } from "@/components/suggestion";

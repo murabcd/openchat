@@ -80,6 +80,10 @@ export async function POST(request: Request) {
             : ["getWeather", "createDocument", "updateDocument", "requestSuggestions"],
         experimental_transform: smoothStream({ chunking: "word" }),
         experimental_generateMessageId: generateUUID,
+        experimental_telemetry: {
+          isEnabled: true,
+          functionId: "stream-text",
+        },
         tools: {
           getWeather,
           createDocument: createDocument({ user, dataStream }),

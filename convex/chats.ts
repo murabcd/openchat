@@ -43,6 +43,7 @@ export const deleteChatById = mutation({
       .first();
     if (!chat) throw new Error("Chat not found");
 
+    // Get all messages for this chat
     const messages = await ctx.db
       .query("messages")
       .withIndex("by_chatId", (q) => q.eq("chatId", args.id))
@@ -53,9 +54,15 @@ export const deleteChatById = mutation({
       .filter((q) => q.eq(q.field("chatId"), args.id))
       .collect();
 
+    const documents = await ctx.db
+      .query("documents")
+      .filter((q) => q.eq(q.field("documentId"), args.id))
+      .collect();
+
     await Promise.all([
       ...votes.map((vote) => ctx.db.delete(vote._id)),
       ...messages.map((message) => ctx.db.delete(message._id)),
+      ...documents.map((document) => ctx.db.delete(document._id)),
       ctx.db.delete(chat._id),
     ]);
   },
