@@ -102,7 +102,7 @@ function PureBlock({
   const { block, setBlock, metadata, setMetadata } = useBlock();
 
   const documents = useQuery(
-    api.documents.getDocumentById,
+    api.documents.getDocumentVersions,
     block.documentId !== "init" && block.status !== "streaming"
       ? { documentId: block.documentId }
       : "skip"
@@ -120,30 +120,69 @@ function PureBlock({
   const updateDocument = useMutation(api.documents.updateDocument);
 
   useEffect(() => {
-    if (documents) {
-      setDocument(documents);
+    if (documents && documents.length > 0) {
+      const mostRecentDocument = documents.at(-1);
 
-      setBlock((currentBlock) => ({
-        ...currentBlock,
-        content: documents.content ?? "",
-      }));
+      if (mostRecentDocument) {
+        setDocument(mostRecentDocument);
+        setCurrentVersionIndex(documents.length - 1);
+        setBlock((currentBlock) => ({
+          ...currentBlock,
+          content: mostRecentDocument.content ?? "",
+        }));
+      }
     }
   }, [documents, setBlock]);
 
   const handleContentChange = useCallback(
-    async (updatedContent: string) => {
-      if (!block || !document) return;
+    (updatedContent: string) => {
+      if (!block) return;
 
-      if (document.content !== updatedContent) {
-        await updateDocument({
-          documentId: block.documentId,
-          content: updatedContent,
-          userId: document.userId,
-        });
-        setIsContentDirty(false);
+      if (documents && documents.length > 0) {
+        const currentDocument = documents.at(-1);
+
+        if (!currentDocument || !currentDocument.content) {
+          setIsContentDirty(false);
+          return;
+        }
+
+        if (currentDocument.content !== updatedContent) {
+          // Create optimistic document update
+          const optimisticDocument = {
+            ...currentDocument,
+            content: updatedContent,
+            _creationTime: Date.now(),
+          };
+
+          // Update local state optimistically
+          setDocument(optimisticDocument);
+          setBlock((currentBlock) => ({
+            ...currentBlock,
+            content: updatedContent,
+          }));
+
+          // Perform the actual update
+          updateDocument({
+            documentId: block.documentId,
+            content: updatedContent,
+            userId: currentDocument.userId,
+          })
+            .then(() => {
+              setIsContentDirty(false);
+            })
+            .catch((error) => {
+              // Revert optimistic update on error
+              setDocument(currentDocument);
+              setBlock((currentBlock) => ({
+                ...currentBlock,
+                content: currentDocument.content ?? "",
+              }));
+              console.error("Failed to update document:", error);
+            });
+        }
       }
     },
-    [block, document, updateDocument]
+    [block, documents, updateDocument, setBlock]
   );
 
   const debouncedHandleContentChange = useDebounceCallback(handleContentChange, 2000);
@@ -152,6 +191,7 @@ function PureBlock({
     (updatedContent: string, debounce: boolean) => {
       if (document && updatedContent !== document.content) {
         setIsContentDirty(true);
+
         if (debounce) {
           debouncedHandleContentChange(updatedContent);
         } else {
@@ -163,17 +203,38 @@ function PureBlock({
   );
 
   function getDocumentContentById(index: number) {
-    if (!document) return "";
-    return document.content ?? "";
+    if (!documents) return "";
+    if (!documents[index]) return "";
+    return documents[index].content ?? "";
   }
 
   const handleVersionChange = (type: "next" | "prev" | "toggle" | "latest") => {
+    if (!documents) return;
+
+    if (type === "latest") {
+      setCurrentVersionIndex(documents.length - 1);
+      setMode("edit");
+    }
+
     if (type === "toggle") {
       setMode((mode) => (mode === "edit" ? "diff" : "edit"));
     }
+
+    if (type === "prev") {
+      if (currentVersionIndex > 0) {
+        setCurrentVersionIndex((index) => index - 1);
+      }
+    } else if (type === "next") {
+      if (currentVersionIndex < documents.length - 1) {
+        setCurrentVersionIndex((index) => index + 1);
+      }
+    }
   };
 
-  const isCurrentVersion = true;
+  const isCurrentVersion =
+    documents && documents.length > 0
+      ? currentVersionIndex === documents.length - 1
+      : true;
 
   const { width: windowWidth, height: windowHeight } = useWindowSize();
   const isMobile = windowWidth ? windowWidth < 768 : false;
@@ -427,7 +488,7 @@ function PureBlock({
               {!isCurrentVersion && (
                 <VersionFooter
                   currentVersionIndex={currentVersionIndex}
-                  documents={documents ? [documents] : undefined}
+                  documents={documents}
                   handleVersionChange={handleVersionChange}
                 />
               )}

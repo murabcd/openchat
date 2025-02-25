@@ -75,3 +75,16 @@ export const deleteDocumentsByIdAfterTimestamp = mutation({
       .then((docs) => docs.forEach((doc) => ctx.db.delete(doc._id)));
   },
 });
+
+export const getDocumentVersions = query({
+  args: { documentId: v.string() },
+  handler: async (ctx, args) => {
+    const documents = await ctx.db
+      .query("documents")
+      .filter((q) => q.eq(q.field("documentId"), args.documentId))
+      .order("desc")
+      .collect();
+
+    return documents;
+  },
+});
