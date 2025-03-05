@@ -97,6 +97,7 @@ export function convertToUIMessages(messages: Array<DBMessage>): Array<Message> 
       content: textContent,
       reasoning,
       toolInvocations,
+      experimental_attachments: message.experimental_attachments,
     });
 
     return chatMessages;

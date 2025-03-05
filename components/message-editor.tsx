@@ -57,7 +57,7 @@ export function MessageEditor({
 
       <div className="flex flex-row gap-2 justify-end">
         <Button
-          variant="outline"
+          variant="ghost"
           className="h-fit py-2 px-3"
           onClick={() => {
             setMode("view");

@@ -16,7 +16,7 @@ export function SidebarToggle({}: ComponentProps<typeof SidebarTrigger>) {
           <PanelLeft className="w-4 h-4" />
         </Button>
       </TooltipTrigger>
-      <TooltipContent align="start">Toggle Sidebar</TooltipContent>
+      <TooltipContent align="start">Toggle sidebar</TooltipContent>
     </Tooltip>
   );
 }

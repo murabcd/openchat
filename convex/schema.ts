@@ -23,6 +23,15 @@ export default defineSchema({
     role: v.union(v.literal("user"), v.literal("assistant"), v.literal("tool")),
     chatId: v.string(),
     messageId: v.string(),
+    experimental_attachments: v.optional(
+      v.array(
+        v.object({
+          url: v.string(),
+          name: v.string(),
+          contentType: v.string(),
+        })
+      )
+    ),
   }).index("by_chatId", ["chatId"]),
 
   documents: defineTable({

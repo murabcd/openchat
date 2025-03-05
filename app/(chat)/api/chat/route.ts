@@ -63,6 +63,7 @@ export async function POST(request: Request) {
         chatId: id,
         role: userMessage.role as "user" | "assistant",
         content: userMessage.content,
+        experimental_attachments: userMessage.experimental_attachments,
       },
     ],
   });
@@ -105,6 +106,7 @@ export async function POST(request: Request) {
                   chatId: id,
                   role: message.role as "user" | "assistant",
                   content: message.content,
+                  experimental_attachments: message.experimental_attachments,
                 })),
               });
             } catch (error) {
