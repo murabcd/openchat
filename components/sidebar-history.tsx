@@ -7,7 +7,7 @@ import { useParams, useRouter } from "next/navigation";
 
 import { isToday, isYesterday, subMonths, subWeeks } from "date-fns";
 
-import { CircleCheck, Globe, Lock, MoreHorizontal, Share2, Trash } from "lucide-react";
+import { Check, MoreHorizontal, Share2, Trash } from "lucide-react";
 
 import { toast } from "sonner";
 
@@ -114,13 +114,8 @@ const PureChatItem = ({
                     setVisibilityType("private");
                   }}
                 >
-                  <div className="flex flex-row gap-2 items-center">
-                    <Lock className="w-4 h-4" />
-                    <span>Private</span>
-                  </div>
-                  {visibilityType === "private" ? (
-                    <CircleCheck className="w-4 h-4" />
-                  ) : null}
+                  Private
+                  {visibilityType === "private" ? <Check className="w-4 h-4" /> : null}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="cursor-pointer flex-row justify-between"
@@ -128,13 +123,8 @@ const PureChatItem = ({
                     setVisibilityType("public");
                   }}
                 >
-                  <div className="flex flex-row gap-2 items-center">
-                    <Globe className="w-4 h-4" />
-                    <span>Public</span>
-                  </div>
-                  {visibilityType === "public" ? (
-                    <CircleCheck className="w-4 h-4" />
-                  ) : null}
+                  Public
+                  {visibilityType === "public" ? <Check className="w-4 h-4" /> : null}
                 </DropdownMenuItem>
               </DropdownMenuSubContent>
             </DropdownMenuPortal>

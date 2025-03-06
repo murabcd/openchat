@@ -2,7 +2,7 @@
 
 import { memo, useState } from "react";
 
-import type { ChatRequestOptions, Message } from "ai";
+import type { Attachment, ChatRequestOptions, Message } from "ai";
 
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -20,6 +20,7 @@ import { MessageReasoning } from "@/components/message-reasoning";
 import { Weather } from "@/components/weather";
 import { DocumentToolCall, DocumentToolResult } from "@/components/document";
 import { DocumentPreview } from "@/components/document-preview";
+import { ImageModal } from "@/components/image-modal";
 
 import equal from "fast-deep-equal";
 
@@ -47,6 +48,13 @@ const PurePreviewMessage = ({
   isReadonly: boolean;
 }) => {
   const [mode, setMode] = useState<"view" | "edit">("view");
+  const [selectedImage, setSelectedImage] = useState<Attachment | null>(null);
+
+  const handleImageClick = (attachment: Attachment) => {
+    if (attachment.contentType && attachment.contentType.startsWith("image")) {
+      setSelectedImage(attachment);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -77,9 +85,28 @@ const PurePreviewMessage = ({
             {message.experimental_attachments && (
               <div className="flex flex-row justify-end gap-2">
                 {message.experimental_attachments.map((attachment) => (
-                  <PreviewAttachment key={attachment.url} attachment={attachment} />
+                  <div
+                    key={attachment.url}
+                    onClick={() => handleImageClick(attachment)}
+                    className={cn({
+                      "cursor-pointer":
+                        attachment.contentType &&
+                        attachment.contentType.startsWith("image"),
+                    })}
+                  >
+                    <PreviewAttachment key={attachment.url} attachment={attachment} />
+                  </div>
                 ))}
               </div>
+            )}
+
+            {selectedImage && (
+              <ImageModal
+                isOpen={!!selectedImage}
+                onClose={() => setSelectedImage(null)}
+                imageUrl={selectedImage.url}
+                imageName={selectedImage.name || "Image"}
+              />
             )}
 
             {message.reasoning && (

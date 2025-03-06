@@ -14,7 +14,7 @@ import { saveChatModelAsCookie } from "@/lib/ai/utils";
 import { chatModels } from "@/lib/ai/models";
 import { cn } from "@/lib/utils";
 
-import { CircleCheck, ChevronDown } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 
 export function ModelSelector({
   selectedModelId,
@@ -70,7 +70,7 @@ export function ModelSelector({
               </div>
 
               <div className="text-foreground dark:text-foreground opacity-0 group-data-[active=true]/item:opacity-100">
-                <CircleCheck className="w-4 h-4" />
+                <Check className="w-4 h-4" />
               </div>
             </DropdownMenuItem>
           );

@@ -4,7 +4,7 @@ import { ReactNode, useMemo, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
-import { CircleCheck, ChevronDown, Globe, Lock } from "lucide-react";
+import { Check, ChevronDown, Globe, Lock } from "lucide-react";
 
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
 
@@ -94,7 +94,7 @@ export function VisibilitySelector({
               )}
             </div>
             <div className="text-foreground dark:text-foreground opacity-0 group-data-[active=true]/item:opacity-100">
-              <CircleCheck className="w-4 h-4" />
+              <Check className="w-4 h-4" />
             </div>
           </DropdownMenuItem>
         ))}
