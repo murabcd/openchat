@@ -233,7 +233,7 @@ function PureMultiModalInput({
         value={input}
         onChange={handleInput}
         className={cn(
-          "min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700",
+          "min-h-[24px] max-h-[calc(65dvh)] overflow-y-auto resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700",
           className
         )}
         rows={2}
