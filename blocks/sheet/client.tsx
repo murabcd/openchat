@@ -82,7 +82,7 @@ export const sheetBlock = new Block<"sheet", Metadata>({
         const cleanedCsv = unparse(nonEmptyRows);
 
         navigator.clipboard.writeText(cleanedCsv);
-        toast.success("Copied csv to clipboard!");
+        toast.success("Copied csv to clipboard");
       },
     },
   ],

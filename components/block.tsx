@@ -244,7 +244,7 @@ function PureBlock({
   );
 
   if (!blockDefinition) {
-    throw new Error("Block definition not found!");
+    throw new Error("Block definition not found");
   }
 
   useEffect(() => {

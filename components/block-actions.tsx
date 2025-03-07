@@ -35,7 +35,7 @@ function PureBlockActions({
   );
 
   if (!blockDefinition) {
-    throw new Error("Block definition not found!");
+    throw new Error("Block definition not found");
   }
 
   const actionContext: BlockActionContext = {

@@ -18,21 +18,22 @@ export const Overview = () => {
           <Image
             src="/logo-dark.svg"
             alt="Logo"
-            width={40}
-            height={40}
+            width={50}
+            height={50}
             className="dark:hidden"
           />
           <Image
             src="/logo.svg"
             alt="Logo"
-            width={40}
-            height={40}
+            width={50}
+            height={50}
             className="hidden dark:block"
           />
         </p>
         <h1 className="text-4xl font-semibold">What can I help with?</h1>
         <p className="font-medium text-muted-foreground">
-          You can learn about the project and contribute by visiting{" "}
+          Type questions, request code examples, or ask for explanations on any topic.
+          Contribute to project, and show your support on{" "}
           <Link
             className="underline underline-offset-4"
             href="https://github.com/muradpm/openchat"

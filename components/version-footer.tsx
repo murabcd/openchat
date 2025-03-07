@@ -10,7 +10,7 @@ import { useBlock } from "@/hooks/use-block";
 
 import { getDocumentTimestampByIndex } from "@/lib/utils";
 
-import { LoaderCircle } from "lucide-react";
+import { Loader } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -75,7 +75,7 @@ export const VersionFooter = ({
           <div>Restore this version</div>
           {isMutating && (
             <div className="animate-spin">
-              <LoaderCircle className="w-4 h-4" />
+              <Loader className="w-4 h-4" />
             </div>
           )}
         </Button>

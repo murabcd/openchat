@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { ChevronDown, LoaderCircle } from "lucide-react";
+import { ChevronDown, Loader } from "lucide-react";
 
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -37,7 +37,7 @@ export function MessageReasoning({ isLoading, reasoning }: MessageReasoningProps
         <div className="flex flex-row gap-2 items-center">
           <div className="font-medium">Reasoning</div>
           <div className="animate-spin">
-            <LoaderCircle className="w-4 h-4" />
+            <Loader className="w-4 h-4" />
           </div>
         </div>
       ) : (

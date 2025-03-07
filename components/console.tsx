@@ -7,7 +7,7 @@ import {
   useState,
 } from "react";
 
-import { Terminal, LoaderCircle, X } from "lucide-react";
+import { Terminal, Loader, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -136,7 +136,7 @@ export function Console({ consoleOutputs, setConsoleOutputs }: ConsoleProps) {
               {["in_progress", "loading_packages"].includes(consoleOutput.status) ? (
                 <div className="flex flex-row gap-2">
                   <div className="animate-spin size-fit self-center mb-auto mt-0.5">
-                    <LoaderCircle className="w-4 h-4" />
+                    <Loader className="w-4 h-4" />
                   </div>
                   <div className="text-muted-foreground">
                     {consoleOutput.status === "in_progress"

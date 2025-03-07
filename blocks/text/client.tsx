@@ -149,7 +149,7 @@ export const textBlock = new Block<"text", TextBlockMetadata>({
       description: "Copy to clipboard",
       onClick: ({ content }) => {
         navigator.clipboard.writeText(content);
-        toast.success("Copied to clipboard!");
+        toast.success("Copied to clipboard");
       },
     },
   ],

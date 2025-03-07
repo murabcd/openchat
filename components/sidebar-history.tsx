@@ -188,7 +188,7 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
       <SidebarGroup>
         <SidebarGroupContent>
           <div className="px-2 text-zinc-500 w-full flex flex-row justify-center items-center text-sm gap-2">
-            Login to save and revisit previous chats!
+            Login to save and revisit previous chats
           </div>
         </SidebarGroupContent>
       </SidebarGroup>
@@ -224,7 +224,7 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
       <SidebarGroup>
         <SidebarGroupContent>
           <div className="px-2 text-zinc-500 w-full flex flex-row justify-center items-center text-sm gap-2">
-            Your conversations will appear here once you start chatting!
+            Your conversations will appear here once you start chatting
           </div>
         </SidebarGroupContent>
       </SidebarGroup>

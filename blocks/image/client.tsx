@@ -68,7 +68,7 @@ export const imageBlock = new Block({
           }, "image/png");
         };
 
-        toast.success("Copied image to clipboard!");
+        toast.success("Copied image to clipboard");
       },
     },
   ],

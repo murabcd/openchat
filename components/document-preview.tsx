@@ -2,7 +2,7 @@
 
 import { memo, MouseEvent, useCallback, useEffect, useMemo, useRef } from "react";
 
-import { File, Fullscreen, Image, LoaderCircle } from "lucide-react";
+import { File, Fullscreen, Image, Loader } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -210,7 +210,7 @@ const PureDocumentHeader = ({
       <div className="text-muted-foreground">
         {isStreaming ? (
           <div className="animate-spin">
-            <LoaderCircle className="w-4 h-4" />
+            <Loader className="w-4 h-4" />
           </div>
         ) : kind === "image" ? (
           <Image className="w-4 h-4" />

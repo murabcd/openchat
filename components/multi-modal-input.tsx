@@ -29,7 +29,6 @@ import { SuggestedActions } from "@/components/suggested-actions";
 
 import equal from "fast-deep-equal";
 
-// Add imports
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
@@ -75,7 +74,7 @@ function PureMultiModalInput({
     if (textareaRef.current) {
       adjustHeight();
     }
-  }, []);
+  }, [input, isLoading]);
 
   const adjustHeight = () => {
     if (textareaRef.current) {
@@ -184,7 +183,7 @@ function PureMultiModalInput({
           ...successfullyUploadedAttachments,
         ]);
       } catch (error) {
-        console.error("Error uploading files!", error);
+        console.error("Error uploading files", error);
       } finally {
         setUploadQueue([]);
       }
@@ -243,7 +242,7 @@ function PureMultiModalInput({
             event.preventDefault();
 
             if (isLoading) {
-              toast.error("Please wait for the model to finish its response!");
+              toast.error("Please wait for the model to finish its response");
             } else {
               submitForm();
             }
