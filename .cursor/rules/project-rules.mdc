@@ -1,7 +1,7 @@
 ---
 description: Project rules for building apps, including architectural principles
 globs: **/*.{ts,tsx,js,jsx}
-alwaysApply: false
+alwaysApply: true
 ---
 ## ROLE
 

@@ -24,7 +24,7 @@ export const getDocumentById = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("documents")
-      .filter((q) => q.eq(q.field("documentId"), args.documentId))
+      .withIndex("by_documentId", (q) => q.eq("documentId", args.documentId))
       .first();
   },
 });
@@ -38,7 +38,7 @@ export const updateDocument = mutation({
   handler: async (ctx, args) => {
     const document = await ctx.db
       .query("documents")
-      .filter((q) => q.eq(q.field("documentId"), args.documentId))
+      .withIndex("by_documentId", (q) => q.eq("documentId", args.documentId))
       .first();
     if (!document) throw new Error("Document not found");
     await ctx.db.patch(document._id, { content: args.content });
@@ -54,23 +54,15 @@ export const deleteDocumentsByIdAfterTimestamp = mutation({
   handler: async (ctx, args) => {
     await ctx.db
       .query("suggestions")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("documentId"), args.documentId),
-          q.gt(q.field("_creationTime"), args.timestamp)
-        )
-      )
+      .withIndex("by_documentId", (q) => q.eq("documentId", args.documentId))
+      .filter((q) => q.gt(q.field("_creationTime"), args.timestamp))
       .collect()
       .then((suggestions) => suggestions.forEach((s) => ctx.db.delete(s._id)));
 
     return await ctx.db
       .query("documents")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("documentId"), args.documentId),
-          q.gt(q.field("_creationTime"), args.timestamp)
-        )
-      )
+      .withIndex("by_documentId", (q) => q.eq("documentId", args.documentId))
+      .filter((q) => q.gt(q.field("_creationTime"), args.timestamp))
       .collect()
       .then((docs) => docs.forEach((doc) => ctx.db.delete(doc._id)));
   },
@@ -81,7 +73,7 @@ export const getDocumentVersions = query({
   handler: async (ctx, args) => {
     const documents = await ctx.db
       .query("documents")
-      .filter((q) => q.eq(q.field("documentId"), args.documentId))
+      .withIndex("by_documentId", (q) => q.eq("documentId", args.documentId))
       .order("desc")
       .collect();
 

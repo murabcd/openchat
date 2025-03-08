@@ -2,7 +2,7 @@ import { parse, unparse } from "papaparse";
 
 import { toast } from "sonner";
 
-import { Copy, LineChart, Redo, Sparkles, Undo } from "lucide-react";
+import { Copy, LineChart, Redo, WandSparkles, Undo } from "lucide-react";
 
 import { Block } from "@/components/create-block";
 import { SpreadsheetEditor } from "@/components/sheet-editor";
@@ -89,7 +89,7 @@ export const sheetBlock = new Block<"sheet", Metadata>({
   toolbar: [
     {
       description: "Format and clean data",
-      icon: <Sparkles className="w-4 h-4" />,
+      icon: <WandSparkles className="w-4 h-4" />,
       onClick: ({ appendMessage }) => {
         appendMessage({
           role: "user",

@@ -30,16 +30,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-import {
-  ArrowUp,
-  Code,
-  Logs,
-  MessageCircle,
-  PenTool,
-  Sparkles,
-  StopCircle,
-  Rows3,
-} from "lucide-react";
+import { ArrowUp, StopCircle, Rows3 } from "lucide-react";
 
 import { blockDefinitions, BlockKind } from "@/components/block";
 import { BlockToolbarItem } from "@/components/create-block";

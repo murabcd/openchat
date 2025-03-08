@@ -147,21 +147,18 @@ function PureBlock({
         }
 
         if (currentDocument.content !== updatedContent) {
-          // Create optimistic document update
           const optimisticDocument = {
             ...currentDocument,
             content: updatedContent,
             _creationTime: Date.now(),
           };
 
-          // Update local state optimistically
           setDocument(optimisticDocument);
           setBlock((currentBlock) => ({
             ...currentBlock,
             content: updatedContent,
           }));
 
-          // Perform the actual update
           updateDocument({
             documentId: block.documentId,
             content: updatedContent,
@@ -171,7 +168,6 @@ function PureBlock({
               setIsContentDirty(false);
             })
             .catch((error) => {
-              // Revert optimistic update on error
               setDocument(currentDocument);
               setBlock((currentBlock) => ({
                 ...currentBlock,

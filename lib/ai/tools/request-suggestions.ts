@@ -1,13 +1,12 @@
 import { DataStreamWriter, streamObject, tool } from "ai";
-
 import { z } from "zod";
 
 import { generateUUID } from "@/lib/utils";
 
 import { myProvider } from "@/lib/ai/models";
 
+import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { Doc } from "@/convex/_generated/dataModel";
-import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 
 type Suggestion = {
@@ -25,8 +24,6 @@ interface RequestSuggestionsProps {
   dataStream: DataStreamWriter;
 }
 
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
 export const requestSuggestions = ({ user, dataStream }: RequestSuggestionsProps) =>
   tool({
     description: "Request suggestions for a document",
@@ -34,7 +31,7 @@ export const requestSuggestions = ({ user, dataStream }: RequestSuggestionsProps
       documentId: z.string().describe("The ID of the document to request edits"),
     }),
     execute: async ({ documentId }) => {
-      const document = await convex.query(api.documents.getDocumentById, {
+      const document = await fetchQuery(api.documents.getDocumentById, {
         documentId: documentId,
       });
 
@@ -79,7 +76,7 @@ export const requestSuggestions = ({ user, dataStream }: RequestSuggestionsProps
       }
 
       if (user) {
-        await convex.mutation(api.suggestions.saveSuggestions, {
+        await fetchMutation(api.suggestions.saveSuggestions, {
           suggestions: suggestions.map((suggestion) => ({
             ...suggestion,
             userId: user._id,

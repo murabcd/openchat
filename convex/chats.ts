@@ -29,7 +29,7 @@ export const getChatById = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("chats")
-      .filter((q) => q.eq(q.field("chatId"), args.chatId))
+      .withIndex("by_chatId", (q) => q.eq("chatId", args.chatId))
       .first();
   },
 });
@@ -39,7 +39,7 @@ export const deleteChatById = mutation({
   handler: async (ctx, args) => {
     const chat = await ctx.db
       .query("chats")
-      .filter((q) => q.eq(q.field("chatId"), args.id))
+      .withIndex("by_chatId", (q) => q.eq("chatId", args.id))
       .first();
     if (!chat) throw new Error("Chat not found");
 
@@ -51,12 +51,12 @@ export const deleteChatById = mutation({
 
     const votes = await ctx.db
       .query("votes")
-      .filter((q) => q.eq(q.field("chatId"), args.id))
+      .withIndex("by_chatId", (q) => q.eq("chatId", args.id))
       .collect();
 
     const documents = await ctx.db
       .query("documents")
-      .filter((q) => q.eq(q.field("documentId"), args.id))
+      .withIndex("by_documentId", (q) => q.eq("documentId", args.id))
       .collect();
 
     await Promise.all([
@@ -99,7 +99,7 @@ export const getVotesByChatId = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("votes")
-      .filter((q) => q.eq(q.field("chatId"), args.chatId))
+      .withIndex("by_chatId", (q) => q.eq("chatId", args.chatId))
       .collect();
   },
 });
@@ -112,7 +112,7 @@ export const updateChatVisiblityById = mutation({
   handler: async (ctx, args) => {
     const chat = await ctx.db
       .query("chats")
-      .filter((q) => q.eq(q.field("chatId"), args.chatId))
+      .withIndex("by_chatId", (q) => q.eq("chatId", args.chatId))
       .first();
 
     if (!chat) throw new Error("Chat not found");

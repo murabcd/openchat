@@ -1,4 +1,7 @@
-<h1 align="center">OpenChat</h1>
+<a href="openchat-beta.vercel.app">
+  <img alt="An Open-source AI Chatbot Built With Next.js." src="./public/preview/openchat.png">
+  <h1 align="center">OpenChat</h1>
+</a>
 
 <p align="center">
   An Open-source AI Chatbot Built With Next.js, Convex, and AI SDK.

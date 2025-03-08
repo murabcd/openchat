@@ -86,7 +86,7 @@ export function PureMessageActions({
               <ThumbsUp className="w-4 h-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Upvote Response</TooltipContent>
+          <TooltipContent>Upvote</TooltipContent>
         </Tooltip>
 
         <Tooltip>
@@ -109,7 +109,7 @@ export function PureMessageActions({
               <ThumbsDown className="w-4 h-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Downvote Response</TooltipContent>
+          <TooltipContent>Downvote</TooltipContent>
         </Tooltip>
       </div>
     </TooltipProvider>

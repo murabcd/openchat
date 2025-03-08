@@ -7,9 +7,9 @@ import { textDocumentHandler } from "@/blocks/text/server";
 
 import { BlockKind } from "@/components/block";
 
+import { fetchMutation } from "convex/nextjs";
 import { Doc } from "@/convex/_generated/dataModel";
 import { api } from "@/convex/_generated/api";
-import { ConvexHttpClient } from "convex/browser";
 
 type Document = {
   title: string;
@@ -47,8 +47,6 @@ export interface DocumentHandler<T = BlockKind> {
   onUpdateDocument: (args: UpdateDocumentCallbackProps) => Promise<void>;
 }
 
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
 export function createDocumentHandler<T extends BlockKind>(config: {
   kind: T;
   onCreateDocument: (params: CreateDocumentCallbackProps) => Promise<string>;
@@ -65,7 +63,7 @@ export function createDocumentHandler<T extends BlockKind>(config: {
       });
 
       if (args.user) {
-        await convex.mutation(api.documents.saveDocument, {
+        await fetchMutation(api.documents.saveDocument, {
           documentId: args.id,
           title: args.title,
           content: draftContent,
@@ -85,7 +83,7 @@ export function createDocumentHandler<T extends BlockKind>(config: {
       });
 
       if (args.user) {
-        await convex.mutation(api.documents.saveDocument, {
+        await fetchMutation(api.documents.saveDocument, {
           documentId: args.document.documentId,
           title: args.document.title,
           content: draftContent,

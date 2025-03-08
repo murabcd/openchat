@@ -6,7 +6,7 @@ import type { Message } from "ai";
 
 import { cookies } from "next/headers";
 
-import { ConvexHttpClient } from "convex/browser";
+import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 
 export async function saveChatModelAsCookie(model: string) {
@@ -14,10 +14,8 @@ export async function saveChatModelAsCookie(model: string) {
   cookieStore.set("chat-model", model);
 }
 
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
 export async function getSuggestions({ documentId }: { documentId: string }) {
-  const suggestions = await convex.query(api.suggestions.getSuggestionsByDocumentId, {
+  const suggestions = await fetchQuery(api.suggestions.getSuggestionsByDocumentId, {
     documentId,
   });
   return suggestions ?? [];

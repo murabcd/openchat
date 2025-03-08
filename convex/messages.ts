@@ -6,7 +6,7 @@ export const deleteTrailingMessages = mutation({
   handler: async (ctx, { messageId }) => {
     const message = await ctx.db
       .query("messages")
-      .filter((q) => q.eq(q.field("messageId"), messageId))
+      .withIndex("by_messageId", (q) => q.eq("messageId", messageId))
       .first();
 
     if (!message) {
@@ -22,13 +22,7 @@ export const deleteTrailingMessages = mutation({
     for (const msg of messagesToDelete) {
       const votes = await ctx.db
         .query("votes")
-        .withIndex("by_messageId")
-        .filter((q) =>
-          q.and(
-            q.eq(q.field("chatId"), message.chatId),
-            q.eq(q.field("messageId"), msg.messageId)
-          )
-        )
+        .withIndex("by_messageId", (q) => q.eq("messageId", msg.messageId))
         .collect();
 
       if (votes.length > 0) {
@@ -63,12 +57,14 @@ export const saveMessages = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const existingMessages = await ctx.db
-      .query("messages")
-      .filter((q) =>
-        q.or(...args.messages.map((msg) => q.eq(q.field("messageId"), msg.messageId)))
-      )
-      .collect();
+    const existingMessages: { messageId: string; _id: any; [key: string]: any }[] = [];
+    for (const msg of args.messages) {
+      const existing = await ctx.db
+        .query("messages")
+        .withIndex("by_messageId", (q) => q.eq("messageId", msg.messageId))
+        .first();
+      if (existing) existingMessages.push(existing);
+    }
 
     const messagesToInsert = args.messages.filter(
       (msg) => !existingMessages.some((existing) => existing.messageId === msg.messageId)

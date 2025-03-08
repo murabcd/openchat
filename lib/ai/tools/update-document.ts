@@ -1,19 +1,16 @@
 import { DataStreamWriter, tool } from "ai";
-
 import { z } from "zod";
 
 import { documentHandlersByBlockKind } from "@/lib/blocks/server";
 
+import { fetchQuery } from "convex/nextjs";
 import { Doc } from "@/convex/_generated/dataModel";
-import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 
 interface UpdateDocumentProps {
   user: Doc<"users">;
   dataStream: DataStreamWriter;
 }
-
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export const updateDocument = ({ user, dataStream }: UpdateDocumentProps) =>
   tool({
@@ -23,7 +20,7 @@ export const updateDocument = ({ user, dataStream }: UpdateDocumentProps) =>
       description: z.string().describe("The description of changes that need to be made"),
     }),
     execute: async ({ id, description }) => {
-      const document = await convex.query(api.documents.getDocumentById, {
+      const document = await fetchQuery(api.documents.getDocumentById, {
         documentId: id,
       });
 

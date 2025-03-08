@@ -1,24 +1,23 @@
 import { type Message, createDataStreamResponse, smoothStream, streamText } from "ai";
 
 import { myProvider } from "@/lib/ai/models";
+import { generateTitleFromUserMessage } from "@/lib/ai/utils";
 import { systemPrompt } from "@/lib/ai/prompts";
+
 import {
   generateUUID,
   getMostRecentUserMessage,
   sanitizeResponseMessages,
 } from "@/lib/utils";
-import { generateTitleFromUserMessage } from "@/lib/ai/utils";
+
 import { createDocument } from "@/lib/ai/tools/create-document";
 import { updateDocument } from "@/lib/ai/tools/update-document";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 
 import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
-import { ConvexHttpClient } from "convex/browser";
+import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
-import { fetchQuery } from "convex/nextjs";
-
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export const maxDuration = 60;
 
@@ -44,10 +43,10 @@ export async function POST(request: Request) {
     return new Response("No user message found", { status: 400 });
   }
 
-  const chat = await convex.query(api.chats.getChatById, { chatId: id });
+  const chat = await fetchQuery(api.chats.getChatById, { chatId: id });
   if (!chat) {
     const title = await generateTitleFromUserMessage({ message: userMessage });
-    await convex.mutation(api.chats.saveChat, {
+    await fetchMutation(api.chats.saveChat, {
       title,
       chatId: id,
       userId: user._id,
@@ -55,8 +54,7 @@ export async function POST(request: Request) {
     });
   }
 
-  // Save user message right away
-  await convex.mutation(api.messages.saveMessages, {
+  await fetchMutation(api.messages.saveMessages, {
     messages: [
       {
         messageId: userMessage.id,
@@ -94,13 +92,12 @@ export async function POST(request: Request) {
         onFinish: async ({ response, reasoning }) => {
           if (user) {
             try {
-              // Save only assistant messages in onFinish
               const sanitizedResponseMessages = sanitizeResponseMessages({
                 messages: response.messages,
                 reasoning,
               });
 
-              await convex.mutation(api.messages.saveMessages, {
+              await fetchMutation(api.messages.saveMessages, {
                 messages: sanitizedResponseMessages.map((message) => ({
                   messageId: message.id,
                   chatId: id,
@@ -144,12 +141,12 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    const chat = await convex.query(api.chats.getChatById, { chatId: id });
+    const chat = await fetchQuery(api.chats.getChatById, { chatId: id });
     if (!chat || chat.userId !== user._id) {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    await convex.mutation(api.chats.deleteChatById, { id });
+    await fetchMutation(api.chats.deleteChatById, { id });
     return new Response("Chat deleted", { status: 200 });
   } catch (error) {
     return new Response("An error occurred while processing your request", {

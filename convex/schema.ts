@@ -16,7 +16,9 @@ export default defineSchema({
     visibility: v.union(v.literal("private"), v.literal("public")),
     chatId: v.string(),
     userId: v.id("users"),
-  }).index("by_userId", ["userId"]),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_chatId", ["chatId"]),
 
   messages: defineTable({
     content: v.any(),
@@ -32,7 +34,9 @@ export default defineSchema({
         })
       )
     ),
-  }).index("by_chatId", ["chatId"]),
+  })
+    .index("by_chatId", ["chatId"])
+    .index("by_messageId", ["messageId"]),
 
   documents: defineTable({
     title: v.string(),
@@ -45,7 +49,9 @@ export default defineSchema({
     ),
     documentId: v.string(),
     userId: v.id("users"),
-  }).index("by_userId", ["userId"]),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_documentId", ["documentId"]),
 
   suggestions: defineTable({
     originalText: v.string(),
@@ -63,5 +69,7 @@ export default defineSchema({
     chatId: v.string(),
     messageId: v.string(),
     isUpvoted: v.boolean(),
-  }).index("by_messageId", ["messageId"]),
+  })
+    .index("by_messageId", ["messageId"])
+    .index("by_chatId", ["chatId"]),
 });
