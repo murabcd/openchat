@@ -21,19 +21,19 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
     {
       title: "Code",
       label: "demonstrating Dijkstra's algorithm",
-      action: "Write code that demonstrates Djikstra's algorithm.",
+      action: "Write code that demonstrates Djikstra's algorithm",
       icon: <Code className="w-4 h-4 mr-2" />,
     },
     {
       title: "Explain",
       label: "the theory of relativity",
-      action: "Explain the theory of relativity in simple terms.",
+      action: "Explain the theory of relativity in simple terms",
       icon: <Lightbulb className="w-4 h-4 mr-2" />,
     },
     {
       title: "Summarize",
       label: "the plot of Hamlet",
-      action: "Summarize the plot of Hamlet briefly.",
+      action: "Summarize the plot of Hamlet briefly",
       icon: <ScanText className="w-4 h-4 mr-2" />,
     },
     {

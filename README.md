@@ -1,4 +1,4 @@
-<a href="openchat-beta.vercel.app">
+<a href="https://openchat-beta.vercel.app">
   <img alt="An Open-source AI Chatbot Built With Next.js." src="./public/preview/openchat.png">
   <h1 align="center">OpenChat</h1>
 </a>
