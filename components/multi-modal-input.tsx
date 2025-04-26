@@ -20,12 +20,13 @@ import { sanitizeUIMessages } from "@/lib/utils";
 import { toast } from "sonner";
 import { useLocalStorage, useWindowSize } from "usehooks-ts";
 
-import { ArrowUp, Paperclip, StopCircle } from "lucide-react";
+import { ArrowUp, Paperclip, StopCircle, Globe } from "lucide-react";
 
 import { PreviewAttachment } from "@/components/preview-attachment";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SuggestedActions } from "@/components/suggested-actions";
+import { Toggle } from "@/components/ui/toggle";
 
 import equal from "fast-deep-equal";
 
@@ -69,6 +70,7 @@ function PureMultiModalInput({
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
+  const [isWebSearchEnabled, setIsWebSearchEnabled] = useState(false);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -121,6 +123,9 @@ function PureMultiModalInput({
 
     handleSubmit(undefined, {
       experimental_attachments: attachments,
+      data: {
+        useWebSearch: isWebSearchEnabled,
+      },
     });
 
     setAttachments([]);
@@ -130,7 +135,15 @@ function PureMultiModalInput({
     if (width && width > 768) {
       textareaRef.current?.focus();
     }
-  }, [attachments, handleSubmit, setAttachments, setLocalStorageInput, width, chatId]);
+  }, [
+    attachments,
+    handleSubmit,
+    setAttachments,
+    setLocalStorageInput,
+    width,
+    chatId,
+    isWebSearchEnabled,
+  ]);
 
   const generateAttachmentUrl = useMutation(api.files.generateAttachmentUrl);
   const getAttachmentUrl = useMutation(api.files.getAttachmentUrl);
@@ -250,8 +263,19 @@ function PureMultiModalInput({
         }}
       />
 
-      <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
+      <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start gap-1">
         <AttachmentsButton fileInputRef={fileInputRef} isLoading={isLoading} />
+
+        <Toggle
+          size="sm"
+          pressed={isWebSearchEnabled}
+          onPressedChange={setIsWebSearchEnabled}
+          aria-label="Toggle web search"
+          disabled={isLoading}
+          className="p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200 data-[state=on]:bg-primary/10 data-[state=on]:dark:bg-primary/20"
+        >
+          <Globe className="w-4 h-4" />
+        </Toggle>
       </div>
 
       <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">

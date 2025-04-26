@@ -3,6 +3,7 @@ import { type Message, createDataStreamResponse, smoothStream, streamText } from
 import { myProvider } from "@/lib/ai/models";
 import { generateTitleFromUserMessage } from "@/lib/ai/utils";
 import { systemPrompt } from "@/lib/ai/prompts";
+import { openai } from "@ai-sdk/openai";
 
 import {
   generateUUID,
@@ -26,8 +27,13 @@ export async function POST(request: Request) {
     id,
     messages,
     selectedChatModel,
-  }: { id: string; messages: Array<Message>; selectedChatModel: string } =
-    await request.json();
+    data,
+  }: {
+    id: string;
+    messages: Array<Message>;
+    selectedChatModel: string;
+    data?: { useWebSearch?: boolean };
+  } = await request.json();
 
   const token = await convexAuthNextjsToken().catch(() => null);
   const user = token
@@ -76,18 +82,22 @@ export async function POST(request: Request) {
         experimental_activeTools:
           selectedChatModel === "chat-model-reasoning"
             ? []
-            : ["getWeather", "createDocument", "updateDocument", "requestSuggestions"],
+            : [
+                "getWeather",
+                "createDocument",
+                "updateDocument",
+                "requestSuggestions",
+                ...(data?.useWebSearch ? ["webSearch" as const] : []),
+              ],
         experimental_transform: smoothStream({ chunking: "word" }),
         experimental_generateMessageId: generateUUID,
-        experimental_telemetry: {
-          isEnabled: true,
-          functionId: "stream-text",
-        },
+        experimental_telemetry: { isEnabled: true, functionId: "stream-text" },
         tools: {
           getWeather,
           createDocument: createDocument({ user, dataStream }),
           updateDocument: updateDocument({ user, dataStream }),
           requestSuggestions: requestSuggestions({ user, dataStream }),
+          ...(data?.useWebSearch ? { webSearch: openai.tools.webSearchPreview() } : {}),
         },
         onFinish: async ({ response, reasoning }) => {
           if (user) {
@@ -113,9 +123,7 @@ export async function POST(request: Request) {
         },
       });
 
-      result.mergeIntoDataStream(dataStream, {
-        sendReasoning: true,
-      });
+      result.mergeIntoDataStream(dataStream, { sendReasoning: true });
     },
     onError: () => {
       return "Oops, an error occurred";

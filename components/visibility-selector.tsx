@@ -16,6 +16,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { api } from "@/convex/_generated/api";
+import { useQuery } from "convex/react";
+
 export type VisibilityType = "private" | "public";
 
 const visibilities: Array<{
@@ -48,6 +51,11 @@ export function VisibilitySelector({
 } & React.ComponentProps<typeof Button>) {
   const [open, setOpen] = useState(false);
 
+  const user = useQuery(api.users.getUser);
+  const chats = useQuery(api.chats.listChats, user ? { userId: user._id } : "skip");
+
+  const hasChats = chats && chats.length > 0;
+
   const { visibilityType, setVisibilityType } = useChatVisibility({
     chatId,
     initialVisibility: selectedVisibilityType,
@@ -79,10 +87,16 @@ export function VisibilitySelector({
           <DropdownMenuItem
             key={visibility.id}
             onSelect={() => {
-              setVisibilityType(visibility.id);
-              setOpen(false);
+              if (visibility.id !== "public" || hasChats) {
+                setVisibilityType(visibility.id);
+                setOpen(false);
+              }
             }}
-            className="gap-4 group/item flex flex-row justify-between items-center"
+            className={cn(
+              "gap-4 group/item flex flex-row justify-between items-center",
+              visibility.id === "public" && !hasChats && "opacity-50 cursor-not-allowed"
+            )}
+            disabled={visibility.id === "public" && !hasChats}
             data-active={visibility.id === visibilityType}
           >
             <div className="flex flex-col gap-1 items-start">

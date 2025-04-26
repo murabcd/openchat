@@ -12,7 +12,7 @@ export const imageDocumentHandler = createDocumentHandler<"image">({
 
     try {
       const { image } = await experimental_generateImage({
-        model: myProvider.imageModel("small-model"),
+        model: myProvider.imageModel("image-model-large"),
         prompt: title,
         n: 1,
       });
@@ -42,7 +42,7 @@ export const imageDocumentHandler = createDocumentHandler<"image">({
 
     try {
       const { image } = await experimental_generateImage({
-        model: myProvider.imageModel("small-model"),
+        model: myProvider.imageModel("image-model-large"),
         prompt: description,
         n: 1,
       });

@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "OpenChat",
-  description: "Open source chat app",
+  description: "OpenChat is an open-source chat app.",
   icons: {
     icon: [
       {

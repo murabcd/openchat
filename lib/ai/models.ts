@@ -6,18 +6,18 @@ export const DEFAULT_CHAT_MODEL: string = "chat-model-small";
 
 export const myProvider = customProvider({
   languageModels: {
-    "chat-model-small": openai("gpt-4o-mini"),
-    "chat-model-large": openai("gpt-4o"),
+    "chat-model-small": openai.responses("gpt-4o-mini"),
+    "chat-model-large": openai.responses("gpt-4o"),
     "chat-model-reasoning": wrapLanguageModel({
       model: groq("deepseek-r1-distill-qwen-32b"),
       middleware: extractReasoningMiddleware({ tagName: "think" }),
     }),
-    "title-model": openai("gpt-4-turbo"),
+    "title-model": openai("gpt-4.1-nano"),
     "block-model": openai("gpt-4o-mini"),
   },
   imageModels: {
-    "small-model": openai.image("dall-e-2"),
-    "large-model": openai.image("dall-e-3"),
+    "image-model-small": openai.image("dall-e-2"),
+    "image-model-large": openai.image("dall-e-3"),
   },
 });
 
