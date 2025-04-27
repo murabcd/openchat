@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 
-import { ChatRequestOptions, CreateMessage, Message } from "ai";
+import { UseChatHelpers } from "@ai-sdk/react";
 import { Code, Lightbulb, ScanText, ThermometerSun } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,7 @@ import { motion } from "framer-motion";
 
 interface SuggestedActionsProps {
   chatId: string;
-  append: (
-    message: Message | CreateMessage,
-    chatRequestOptions?: ChatRequestOptions
-  ) => Promise<string | null | undefined>;
+  append: UseChatHelpers["append"];
 }
 
 function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {

@@ -57,7 +57,7 @@ export const Chat = ({
     onFinish: () => {
       // Could add Convex mutation here if needed
     },
-    onError: (error) => {
+    onError: () => {
       toast.error("An error occured, please try again");
     },
   });

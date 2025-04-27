@@ -15,8 +15,8 @@ interface BlockActionsProps {
   currentVersionIndex: number;
   isCurrentVersion: boolean;
   mode: "edit" | "diff";
-  metadata: any;
-  setMetadata: Dispatch<SetStateAction<any>>;
+  metadata: unknown;
+  setMetadata: Dispatch<SetStateAction<unknown>>;
 }
 
 function PureBlockActions({
@@ -63,8 +63,9 @@ function PureBlockActions({
                 setIsLoading(true);
 
                 try {
-                  await Promise.resolve(action.onClick(actionContext));
-                } catch (error) {
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  await Promise.resolve(action.onClick(actionContext as any));
+                } catch {
                   toast.error("Failed to execute action");
                 } finally {
                   setIsLoading(false);
@@ -74,7 +75,8 @@ function PureBlockActions({
                 isLoading || block.status === "streaming"
                   ? true
                   : action.isDisabled
-                    ? action.isDisabled(actionContext)
+                    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      action.isDisabled(actionContext as any)
                     : false
               }
             >

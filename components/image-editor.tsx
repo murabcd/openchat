@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 
 interface ImageEditorProps {
   title: string;
@@ -17,27 +18,41 @@ interface ImageEditorProps {
 }
 
 export function ImageEditor({ title, content, status, isInline }: ImageEditorProps) {
-  let storageId = null;
-  let contentType = "base64";
+  let storageId: string | null = null;
+  let contentType: "base64" | "storage" | "loading" = "loading";
 
-  try {
-    const parsed = JSON.parse(content);
-
-    if (parsed && parsed.storageId) {
-      contentType = "storage";
-      storageId = parsed.storageId;
+  if (content.startsWith("data:image")) {
+    contentType = "base64";
+  } else {
+    try {
+      if (content && content.trim().startsWith("{")) {
+        const parsed = JSON.parse(content);
+        if (parsed && parsed.storageId) {
+          contentType = "storage";
+          storageId = parsed.storageId;
+        } else {
+          contentType = "loading";
+        }
+      } else if (content) {
+        contentType = "loading";
+      }
+    } catch {
+      contentType = "loading";
     }
-  } catch (error) {
-    console.error("Error parsing image content:", error);
   }
 
   const imageData = useQuery(
     api.files.getAiImageUrl,
-    contentType === "storage" && storageId ? { storageId } : "skip"
+    contentType === "storage" && storageId
+      ? { storageId: storageId as Id<"_storage"> }
+      : "skip"
   );
 
   const imageUrl = imageData?.url;
-  const isLoading = contentType === "storage" && !imageUrl;
+  const isLoading =
+    status === "streaming" ||
+    contentType === "loading" ||
+    (contentType === "storage" && !imageUrl);
 
   return (
     <div
@@ -46,7 +61,7 @@ export function ImageEditor({ title, content, status, isInline }: ImageEditorPro
         "h-[200px]": isInline,
       })}
     >
-      {status === "streaming" || isLoading ? (
+      {isLoading ? (
         <div className="flex flex-row gap-4 items-center">
           {!isInline && (
             <div className="animate-spin">
@@ -67,17 +82,17 @@ export function ImageEditor({ title, content, status, isInline }: ImageEditorPro
             />
           </picture>
         )
-      ) : (
+      ) : contentType === "base64" ? (
         <picture>
           <img
             className={cn("w-full h-fit max-w-[800px]", {
               "p-0 md:p-20": !isInline,
             })}
-            src={`data:image/png;base64,${content}`}
+            src={content}
             alt={title}
           />
         </picture>
-      )}
+      ) : null}
     </div>
   );
 }

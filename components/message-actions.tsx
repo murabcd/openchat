@@ -40,7 +40,7 @@ export function PureMessageActions({
   vote: Vote | undefined;
   isLoading: boolean;
 }) {
-  const [_, copyToClipboard] = useCopyToClipboard();
+  const [, copyToClipboard] = useCopyToClipboard();
   const voteMessage = useMutation(api.chats.voteMessage);
 
   if (isLoading) return null;

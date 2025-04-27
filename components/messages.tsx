@@ -1,6 +1,8 @@
 import { memo } from "react";
 
-import { ChatRequestOptions, Message } from "ai";
+import { UIMessage } from "ai";
+import { UseChatHelpers } from "@ai-sdk/react";
+import { Doc } from "@/convex/_generated/dataModel";
 
 import { useScrollToBottom } from "@/components/use-scroll-to-bottom";
 import { PreviewMessage, ThinkingMessage } from "@/components/message";
@@ -8,19 +10,13 @@ import { Overview } from "@/components/overview";
 
 import equal from "fast-deep-equal";
 
-type Vote = {
-  chatId: string;
-  messageId: string;
-  isUpvoted: boolean;
-};
-
 interface MessagesProps {
   chatId: string;
   isLoading: boolean;
-  votes: Array<Vote> | undefined;
-  messages: Array<Message>;
-  setMessages: (messages: Message[] | ((messages: Message[]) => Message[])) => void;
-  reload: (chatRequestOptions?: ChatRequestOptions) => Promise<string | null | undefined>;
+  votes: Array<Doc<"votes">> | undefined;
+  messages: Array<UIMessage>;
+  setMessages: UseChatHelpers["setMessages"];
+  reload: UseChatHelpers["reload"];
   isReadonly: boolean;
   isBlockVisible: boolean;
 }

@@ -2,8 +2,9 @@
 
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 
-import { ChatRequestOptions, Message } from "ai";
-import { toast } from "sonner";
+import type { UIMessage } from "ai";
+import { UseChatHelpers } from "@ai-sdk/react";
+
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
@@ -11,10 +12,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 export type MessageEditorProps = {
-  message: Message;
+  message: UIMessage;
   setMode: Dispatch<SetStateAction<"view" | "edit">>;
-  setMessages: (messages: Message[] | ((messages: Message[]) => Message[])) => void;
-  reload: (chatRequestOptions?: ChatRequestOptions) => Promise<string | null | undefined>;
+  setMessages: UseChatHelpers["setMessages"];
+  reload: UseChatHelpers["reload"];
 };
 
 export function MessageEditor({
@@ -24,7 +25,9 @@ export function MessageEditor({
   reload,
 }: MessageEditorProps) {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [draftContent, setDraftContent] = useState<string>(message.content);
+  const initialContent =
+    message.parts.find((part) => part.type === "text")?.text ?? message.content ?? "";
+  const [draftContent, setDraftContent] = useState<string>(initialContent);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const deleteTrailingMessages = useMutation(api.messages.deleteTrailingMessages);
 
@@ -49,6 +52,7 @@ export function MessageEditor({
   return (
     <div className="flex flex-col gap-2 w-full">
       <Textarea
+        data-testid="message-editor"
         ref={textareaRef}
         className="bg-transparent outline-none overflow-hidden resize-none !text-base rounded-xl w-full"
         value={draftContent}
@@ -80,9 +84,10 @@ export function MessageEditor({
               const index = messages.findIndex((m) => m.id === message.id);
 
               if (index !== -1) {
-                const updatedMessage = {
+                const updatedMessage: UIMessage = {
                   ...message,
                   content: draftContent,
+                  parts: [{ type: "text", text: draftContent }],
                 };
 
                 return [...messages.slice(0, index), updatedMessage];

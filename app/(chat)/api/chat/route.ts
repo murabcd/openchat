@@ -1,4 +1,10 @@
-import { type Message, createDataStreamResponse, smoothStream, streamText } from "ai";
+import {
+  type Message,
+  createDataStreamResponse,
+  smoothStream,
+  streamText,
+  type Attachment,
+} from "ai";
 
 import { myProvider } from "@/lib/ai/models";
 import { generateTitleFromUserMessage } from "@/lib/ai/utils";
@@ -19,6 +25,10 @@ import { getWeather } from "@/lib/ai/tools/get-weather";
 import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
+
+interface MessageWithAttachments extends Message {
+  experimental_attachments?: Attachment[];
+}
 
 export const maxDuration = 60;
 
@@ -67,7 +77,11 @@ export async function POST(request: Request) {
         chatId: id,
         role: userMessage.role as "user" | "assistant",
         content: userMessage.content,
-        experimental_attachments: (userMessage as any).experimental_attachments,
+        experimental_attachments: (
+          userMessage as MessageWithAttachments
+        ).experimental_attachments
+          ?.filter((att) => att.name !== undefined && att.contentType !== undefined)
+          .map((att) => ({ ...att, name: att.name!, contentType: att.contentType! })),
       },
     ],
   });
@@ -113,7 +127,17 @@ export async function POST(request: Request) {
                   chatId: id,
                   role: message.role as "user" | "assistant",
                   content: message.content,
-                  experimental_attachments: (message as any).experimental_attachments,
+                  experimental_attachments: (
+                    message as MessageWithAttachments
+                  ).experimental_attachments
+                    ?.filter(
+                      (att) => att.name !== undefined && att.contentType !== undefined
+                    )
+                    .map((att) => ({
+                      ...att,
+                      name: att.name!,
+                      contentType: att.contentType!,
+                    })),
                 })),
               });
             } catch (error) {
@@ -122,6 +146,8 @@ export async function POST(request: Request) {
           }
         },
       });
+
+      result.consumeStream();
 
       result.mergeIntoDataStream(dataStream, { sendReasoning: true });
     },
@@ -156,7 +182,7 @@ export async function DELETE(request: Request) {
 
     await fetchMutation(api.chats.deleteChatById, { id });
     return new Response("Chat deleted", { status: 200 });
-  } catch (error) {
+  } catch {
     return new Response("An error occurred while processing your request", {
       status: 500,
     });

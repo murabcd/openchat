@@ -11,11 +11,9 @@ import {
   RefObject,
 } from "react";
 
-import type { ChatRequestOptions, CreateMessage, Message } from "ai";
-import { UseChatHelpers } from "ai/react";
+import { UseChatHelpers } from "@ai-sdk/react";
 
-import { cn } from "@/lib/utils";
-import { sanitizeUIMessages } from "@/lib/utils";
+import { cn, sanitizeUIMessages } from "@/lib/utils";
 
 import { AnimatePresence, motion, useMotionValue, useTransform } from "framer-motion";
 
@@ -30,7 +28,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-import { ArrowUp, StopCircle, Rows3 } from "lucide-react";
+import { ArrowUp, CircleStop, Rows3 } from "lucide-react";
 
 import { blockDefinitions, BlockKind } from "@/components/block";
 import { BlockToolbarItem } from "@/components/create-block";
@@ -43,10 +41,7 @@ type ToolProps = {
   isToolbarVisible?: boolean;
   setIsToolbarVisible?: Dispatch<SetStateAction<boolean>>;
   isAnimating: boolean;
-  append: (
-    message: Message | CreateMessage,
-    chatRequestOptions?: ChatRequestOptions
-  ) => Promise<string | null | undefined>;
+  append: UseChatHelpers["append"];
   onClick: ({ appendMessage }: { appendMessage: UseChatHelpers["append"] }) => void;
 };
 
@@ -111,11 +106,7 @@ const Tool = ({
           animate={{ opacity: 1, transition: { delay: 0.1 } }}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          exit={{
-            scale: 0.9,
-            opacity: 0,
-            transition: { duration: 0.1 },
-          }}
+          exit={{ scale: 0.9, opacity: 0, transition: { duration: 0.1 } }}
           onClick={() => {
             handleSelect();
           }}
@@ -134,7 +125,7 @@ const Tool = ({
   );
 };
 
-const randomArr = [...Array(6)].map((x) => nanoid(5));
+const randomArr = [...Array(6)].map(() => nanoid(5));
 
 const ReadingLevelSelector = ({
   setSelectedTool,
@@ -143,10 +134,7 @@ const ReadingLevelSelector = ({
 }: {
   setSelectedTool: Dispatch<SetStateAction<string | null>>;
   isAnimating: boolean;
-  append: (
-    message: Message | CreateMessage,
-    chatRequestOptions?: ChatRequestOptions
-  ) => Promise<string | null | undefined>;
+  append: UseChatHelpers["append"];
 }) => {
   const LEVELS = [
     "Elementary",
@@ -260,10 +248,7 @@ export const Tools = ({
   isToolbarVisible: boolean;
   selectedTool: string | null;
   setSelectedTool: Dispatch<SetStateAction<string | null>>;
-  append: (
-    message: Message | CreateMessage,
-    chatRequestOptions?: ChatRequestOptions
-  ) => Promise<string | null | undefined>;
+  append: UseChatHelpers["append"];
   isAnimating: boolean;
   setIsToolbarVisible: Dispatch<SetStateAction<boolean>>;
   tools: Array<BlockToolbarItem>;
@@ -320,12 +305,9 @@ const PureToolbar = ({
   isToolbarVisible: boolean;
   setIsToolbarVisible: Dispatch<SetStateAction<boolean>>;
   isLoading: boolean;
-  append: (
-    message: Message | CreateMessage,
-    chatRequestOptions?: ChatRequestOptions
-  ) => Promise<string | null | undefined>;
-  stop: () => void;
-  setMessages: Dispatch<SetStateAction<Message[]>>;
+  append: UseChatHelpers["append"];
+  stop: UseChatHelpers["stop"];
+  setMessages: UseChatHelpers["setMessages"];
   blockKind: BlockKind;
 }) => {
   const toolbarRef = useRef<HTMLDivElement>(null) as RefObject<HTMLDivElement>;
@@ -441,7 +423,7 @@ const PureToolbar = ({
               setMessages((messages) => sanitizeUIMessages(messages));
             }}
           >
-            <StopCircle className="w-4 h-4" />
+            <CircleStop className="w-4 h-4" />
           </motion.div>
         ) : selectedTool === "adjust-reading-level" ? (
           <ReadingLevelSelector

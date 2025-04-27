@@ -11,6 +11,8 @@ import { parse, unparse } from "papaparse";
 
 import { cn } from "@/lib/utils";
 
+type RowData = { id: number; rowNumber: number; [key: string]: string | number };
+
 type SheetEditorProps = {
   content: string;
   saveContent: (content: string, isCurrentVersion: boolean) => void;
@@ -22,12 +24,7 @@ type SheetEditorProps = {
 const MIN_ROWS = 50;
 const MIN_COLS = 26;
 
-const PureSpreadsheetEditor = ({
-  content,
-  saveContent,
-  status,
-  isCurrentVersion,
-}: SheetEditorProps) => {
+const PureSpreadsheetEditor = ({ content, saveContent }: SheetEditorProps) => {
   const { theme } = useTheme();
 
   const parseData = useMemo(() => {
@@ -78,7 +75,7 @@ const PureSpreadsheetEditor = ({
 
   const initialRows = useMemo(() => {
     return parseData.map((row, rowIndex) => {
-      const rowData: any = {
+      const rowData: RowData = {
         id: rowIndex,
         rowNumber: rowIndex + 1,
       };
@@ -97,15 +94,15 @@ const PureSpreadsheetEditor = ({
     setLocalRows(initialRows);
   }, [initialRows]);
 
-  const generateCsv = (data: any[][]) => {
+  const generateCsv = (data: string[][]) => {
     return unparse(data);
   };
 
-  const handleRowsChange = (newRows: any[]) => {
+  const handleRowsChange = (newRows: RowData[]) => {
     setLocalRows(newRows);
 
     const updatedData = newRows.map((row) => {
-      return columns.slice(1).map((col) => row[col.key] || "");
+      return columns.slice(1).map((col) => (row[col.key] || "").toString());
     });
 
     const newCsvContent = generateCsv(updatedData);

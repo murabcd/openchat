@@ -21,14 +21,24 @@ import { InlineDocumentSkeleton } from "@/components/document-skeleton";
 
 import equal from "fast-deep-equal";
 
-import { Doc } from "@/convex/_generated/dataModel";
+import { Doc, Id } from "@/convex/_generated/dataModel";
 
 type Document = Doc<"documents">;
 
+interface ToolResult {
+  id: Id<"documents">;
+  title: string;
+  kind: BlockKind;
+}
+interface ToolArgs {
+  title: string;
+  kind: BlockKind;
+}
+
 interface DocumentPreviewProps {
   isReadonly: boolean;
-  result?: any;
-  args?: any;
+  result?: ToolResult;
+  args?: ToolArgs;
 }
 
 export function DocumentPreview({ isReadonly, result, args }: DocumentPreviewProps) {
@@ -90,17 +100,17 @@ export function DocumentPreview({ isReadonly, result, args }: DocumentPreviewPro
     ? previewDocument
     : block.status === "streaming"
       ? {
-          _id: block.documentId as any,
+          _id: block.documentId as Id<"documents">,
           _creationTime: Date.now(),
           documentId: block.documentId,
           title: block.title,
           kind: block.kind,
           content: block.content,
-          userId: "noop" as any,
+          userId: "noop" as Id<"users">,
         }
       : null;
 
-  if (!document) return <LoadingSkeleton blockKind={block.kind} />;
+  if (!document || !result) return <LoadingSkeleton blockKind={block.kind} />;
 
   return (
     <div className="relative w-full cursor-pointer">
@@ -146,7 +156,7 @@ const PureHitboxLayer = ({
   setBlock,
 }: {
   hitboxRef: React.RefObject<HTMLDivElement | null>;
-  result: any;
+  result: ToolResult;
   setBlock: (updaterFn: UIBlock | ((currentBlock: UIBlock) => UIBlock)) => void;
 }) => {
   const handleClick = useCallback(
@@ -213,6 +223,7 @@ const PureDocumentHeader = ({
             <Loader className="w-4 h-4" />
           </div>
         ) : kind === "image" ? (
+          // eslint-disable-next-line jsx-a11y/alt-text
           <Image className="w-4 h-4" />
         ) : (
           <File className="w-4 h-4" />

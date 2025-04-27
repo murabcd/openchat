@@ -7,7 +7,8 @@ import {
   useState,
 } from "react";
 
-import type { Attachment, ChatRequestOptions, CreateMessage, Message } from "ai";
+import type { Attachment, UIMessage } from "ai";
+import { UseChatHelpers } from "@ai-sdk/react";
 
 import { formatDistance } from "date-fns";
 
@@ -33,12 +34,6 @@ import equal from "fast-deep-equal";
 import { Doc } from "@/convex/_generated/dataModel";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-
-type Vote = {
-  chatId: string;
-  messageId: string;
-  isUpvoted: boolean;
-};
 
 type Document = Doc<"documents">;
 
@@ -78,25 +73,17 @@ function PureBlock({
 }: {
   chatId: string;
   input: string;
-  setInput: (input: string) => void;
+  setInput: UseChatHelpers["setInput"];
   isLoading: boolean;
-  stop: () => void;
+  stop: UseChatHelpers["stop"];
   attachments: Array<Attachment>;
   setAttachments: Dispatch<SetStateAction<Array<Attachment>>>;
-  messages: Array<Message>;
-  setMessages: Dispatch<SetStateAction<Array<Message>>>;
-  votes: Array<Vote> | undefined;
-  append: (
-    message: Message | CreateMessage,
-    chatRequestOptions?: ChatRequestOptions
-  ) => Promise<string | null | undefined>;
-  handleSubmit: (
-    event?: {
-      preventDefault?: () => void;
-    },
-    chatRequestOptions?: ChatRequestOptions
-  ) => void;
-  reload: (chatRequestOptions?: ChatRequestOptions) => Promise<string | null | undefined>;
+  messages: Array<UIMessage>;
+  setMessages: UseChatHelpers["setMessages"];
+  votes: Array<Doc<"votes">> | undefined;
+  append: UseChatHelpers["append"];
+  handleSubmit: UseChatHelpers["handleSubmit"];
+  reload: UseChatHelpers["reload"];
   isReadonly: boolean;
 }) {
   const { block, setBlock, metadata, setMetadata } = useBlock();
@@ -176,6 +163,11 @@ function PureBlock({
               console.error("Failed to update document:", error);
             });
         }
+      } else if (block.documentId !== "init") {
+        console.warn(
+          "Attempted content change with no existing documents loaded for block:",
+          block.documentId
+        );
       }
     },
     [block, documents, updateDocument, setBlock]
@@ -258,6 +250,7 @@ function PureBlock({
     <AnimatePresence>
       {block.isVisible && (
         <motion.div
+          data-testid="block"
           className="flex flex-row h-dvh w-dvw fixed top-0 left-0 z-50 bg-transparent"
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
@@ -500,7 +493,8 @@ export const Block = memo(PureBlock, (prevProps, nextProps) => {
   if (prevProps.isLoading !== nextProps.isLoading) return false;
   if (!equal(prevProps.votes, nextProps.votes)) return false;
   if (prevProps.input !== nextProps.input) return false;
-  if (!equal(prevProps.messages, nextProps.messages.length)) return false;
+  if (prevProps.messages.length !== nextProps.messages.length) return false;
+  if (!equal(prevProps.messages, nextProps.messages)) return false;
 
   return true;
 });

@@ -17,7 +17,7 @@ type Suggestion = {
   suggestionId: string;
 };
 
-export type BlockActionContext<M = any> = {
+export type BlockActionContext<M = unknown> = {
   content: string;
   handleVersionChange: (type: "next" | "prev" | "toggle" | "latest") => void;
   currentVersionIndex: number;
@@ -27,7 +27,7 @@ export type BlockActionContext<M = any> = {
   setMetadata: Dispatch<SetStateAction<M>>;
 };
 
-type BlockAction<M = any> = {
+type BlockAction<M = unknown> = {
   icon: ReactNode;
   label?: string;
   description: string;
@@ -45,7 +45,7 @@ export type BlockToolbarItem = {
   onClick: (context: BlockToolbarContext) => void;
 };
 
-interface BlockContent<M = any> {
+interface BlockContent<M = unknown> {
   title: string;
   content: string;
   mode: "edit" | "diff";
@@ -61,12 +61,12 @@ interface BlockContent<M = any> {
   setMetadata: Dispatch<SetStateAction<M>>;
 }
 
-interface InitializeParameters<M = any> {
+interface InitializeParameters<M = unknown> {
   documentId: string;
   setMetadata: Dispatch<SetStateAction<M>>;
 }
 
-type BlockConfig<T extends string, M = any> = {
+type BlockConfig<T extends string, M = unknown> = {
   kind: T;
   description: string;
   content: ComponentType<BlockContent<M>>;
@@ -80,13 +80,13 @@ type BlockConfig<T extends string, M = any> = {
   }) => void;
 };
 
-export class Block<T extends string, M = any> {
+export class Block<T extends string, M = unknown> {
   readonly kind: T;
   readonly description: string;
   readonly content: ComponentType<BlockContent<M>>;
   readonly actions: Array<BlockAction<M>>;
   readonly toolbar: BlockToolbarItem[];
-  readonly initialize?: (parameters: InitializeParameters) => void;
+  readonly initialize?: (parameters: InitializeParameters<M>) => void;
   readonly onStreamPart: (args: {
     setMetadata: Dispatch<SetStateAction<M>>;
     setBlock: Dispatch<SetStateAction<UIBlock>>;

@@ -1,22 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import type React from "react";
 
 interface CodeBlockProps {
-  node: any;
   inline: boolean;
   className: string;
-  children: any;
+  children: React.ReactNode;
 }
 
 export function CodeBlock({
-  node,
   inline,
   className,
   children,
   ...props
-}: CodeBlockProps) {
+}: CodeBlockProps & React.HTMLAttributes<HTMLElement>) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [output, setOutput] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [tab, setTab] = useState<"code" | "run">("code");
 
   if (!inline) {
