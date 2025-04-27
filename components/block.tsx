@@ -5,6 +5,7 @@ import {
   useCallback,
   useEffect,
   useState,
+  useRef,
 } from "react";
 
 import type { Attachment, UIMessage } from "ai";
@@ -97,7 +98,7 @@ function PureBlock({
 
   const [mode, setMode] = useState<"edit" | "diff">("edit");
   const [document, setDocument] = useState<Document | null>(null);
-  const [currentVersionIndex, setCurrentVersionIndex] = useState(-1);
+  const [localCurrentVersionIndex, setLocalCurrentVersionIndex] = useState(-1);
   const [isContentDirty, setIsContentDirty] = useState(false);
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
 
@@ -105,28 +106,55 @@ function PureBlock({
   const isDocumentsFetching = documents === undefined;
 
   const updateDocument = useMutation(api.documents.updateDocument);
+  const previousStatusRef = useRef<string | null>(null);
+  const justFinishedStreaming = useRef(false);
 
   useEffect(() => {
+    if (previousStatusRef.current === "streaming" && block.status === "idle") {
+      justFinishedStreaming.current = true;
+    }
+    previousStatusRef.current = block.status;
+  }, [block.status]);
+
+  useEffect(() => {
+    if (justFinishedStreaming.current) {
+      justFinishedStreaming.current = false;
+      if (documents && documents.length > 0) {
+        const mostRecentDocument = documents[0];
+        if (mostRecentDocument) {
+          setDocument(mostRecentDocument);
+          setLocalCurrentVersionIndex(documents.length - 1);
+        }
+      }
+      if (block.status !== "idle") {
+        setBlock((currentBlock) => ({ ...currentBlock, status: "idle" }));
+      }
+      return;
+    }
+
     if (documents && documents.length > 0) {
-      const mostRecentDocument = documents.at(-1);
+      const mostRecentDocument = documents[0];
 
       if (mostRecentDocument) {
         setDocument(mostRecentDocument);
-        setCurrentVersionIndex(documents.length - 1);
+        setLocalCurrentVersionIndex(documents.length - 1);
+
         setBlock((currentBlock) => ({
           ...currentBlock,
+          status: "idle",
           content: mostRecentDocument.content ?? "",
         }));
       }
+    } else {
     }
-  }, [documents, setBlock]);
+  }, [documents, setBlock, block.status]);
 
   const handleContentChange = useCallback(
     (updatedContent: string) => {
       if (!block) return;
 
       if (documents && documents.length > 0) {
-        const currentDocument = documents.at(-1);
+        const currentDocument = documents[0];
 
         if (!currentDocument || !currentDocument.content) {
           setIsContentDirty(false);
@@ -164,10 +192,6 @@ function PureBlock({
             });
         }
       } else if (block.documentId !== "init") {
-        console.warn(
-          "Attempted content change with no existing documents loaded for block:",
-          block.documentId
-        );
       }
     },
     [block, documents, updateDocument, setBlock]
@@ -200,7 +224,7 @@ function PureBlock({
     if (!documents) return;
 
     if (type === "latest") {
-      setCurrentVersionIndex(documents.length - 1);
+      setLocalCurrentVersionIndex(documents.length - 1);
       setMode("edit");
     }
 
@@ -209,19 +233,19 @@ function PureBlock({
     }
 
     if (type === "prev") {
-      if (currentVersionIndex > 0) {
-        setCurrentVersionIndex((index) => index - 1);
+      if (localCurrentVersionIndex > 0) {
+        setLocalCurrentVersionIndex((index) => index - 1);
       }
     } else if (type === "next") {
-      if (currentVersionIndex < documents.length - 1) {
-        setCurrentVersionIndex((index) => index + 1);
+      if (localCurrentVersionIndex < documents.length - 1) {
+        setLocalCurrentVersionIndex((index) => index + 1);
       }
     }
   };
 
   const isCurrentVersion =
     documents && documents.length > 0
-      ? currentVersionIndex === documents.length - 1
+      ? localCurrentVersionIndex === documents.length - 1
       : true;
 
   const { width: windowWidth, height: windowHeight } = useWindowSize();
@@ -428,7 +452,7 @@ function PureBlock({
 
               <BlockActions
                 block={block}
-                currentVersionIndex={currentVersionIndex}
+                currentVersionIndex={localCurrentVersionIndex}
                 handleVersionChange={handleVersionChange}
                 isCurrentVersion={isCurrentVersion}
                 mode={mode}
@@ -443,11 +467,11 @@ function PureBlock({
                 content={
                   isCurrentVersion
                     ? block.content
-                    : getDocumentContentById(currentVersionIndex)
+                    : getDocumentContentById(localCurrentVersionIndex)
                 }
                 mode={mode}
                 status={block.status}
-                currentVersionIndex={currentVersionIndex}
+                currentVersionIndex={localCurrentVersionIndex}
                 suggestions={[]}
                 onSaveContent={saveContent}
                 isInline={false}
@@ -476,7 +500,7 @@ function PureBlock({
             <AnimatePresence>
               {!isCurrentVersion && (
                 <VersionFooter
-                  currentVersionIndex={currentVersionIndex}
+                  currentVersionIndex={localCurrentVersionIndex}
                   documents={documents}
                   handleVersionChange={handleVersionChange}
                 />

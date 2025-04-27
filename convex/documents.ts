@@ -36,13 +36,25 @@ export const updateDocument = mutation({
     userId: v.id("users"),
   },
   handler: async (ctx, args) => {
-    const document = await ctx.db
+    const latestVersion = await ctx.db
       .query("documents")
       .withIndex("by_documentId", (q) => q.eq("documentId", args.documentId))
+      .order("desc")
       .first();
-    if (!document) throw new Error("Document not found");
-    await ctx.db.patch(document._id, { content: args.content });
-    return document._id;
+
+    if (!latestVersion) {
+      throw new Error("Cannot update document: No existing version found.");
+    }
+
+    const newVersionId = await ctx.db.insert("documents", {
+      documentId: args.documentId,
+      userId: args.userId,
+      title: latestVersion.title,
+      kind: latestVersion.kind,
+      content: args.content ?? latestVersion.content,
+    });
+
+    return newVersionId;
   },
 });
 

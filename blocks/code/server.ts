@@ -44,9 +44,11 @@ export const codeDocumentHandler = createDocumentHandler<"code">({
   onUpdateDocument: async ({ document, description, dataStream }) => {
     let draftContent = "";
 
+    const systemPrompt = updateDocumentPrompt(document.content, "code");
+
     const { fullStream } = streamObject({
       model: myProvider.languageModel("block-model"),
-      system: updateDocumentPrompt(document.content, "code"),
+      system: systemPrompt,
       prompt: description,
       schema: z.object({
         code: z.string(),

@@ -58,6 +58,8 @@ interface Metadata {
   outputs: Array<ConsoleOutput>;
 }
 
+type ConsoleStatus = ConsoleOutput["status"];
+
 export const codeBlock = new Block<"code", Metadata>({
   kind: "code",
   description:
@@ -112,63 +114,87 @@ export const codeBlock = new Block<"code", Metadata>({
         const runId = generateUUID();
         const outputContent: Array<ConsoleOutputContent> = [];
 
-        setMetadata((metadata) => ({
-          ...metadata,
-          outputs: [
-            ...metadata.outputs,
-            {
-              id: runId,
-              contents: [],
-              status: "in_progress",
-            },
-          ],
-        }));
+        const updateMetadataStatus = (status: ConsoleStatus, message?: string) => {
+          setMetadata((metadata) => ({
+            ...metadata,
+            outputs: [
+              ...metadata.outputs.filter((output) => output.id !== runId),
+              {
+                id: runId,
+                contents: message ? [{ type: "text", value: message }] : [],
+                status: status,
+              },
+            ],
+          }));
+        };
+
+        updateMetadataStatus("in_progress", "Starting...");
 
         try {
-          // @ts-expect-error - loadPyodide is not defined
-          const currentPyodideInstance = await globalThis.loadPyodide({
+          updateMetadataStatus("loading_pyodide");
+          const pyodide = await (globalThis as any).loadPyodide({
             indexURL: "https://cdn.jsdelivr.net/pyodide/v0.23.4/full/",
           });
 
-          currentPyodideInstance.setStdout({
+          pyodide.setStdout({
             batched: (output: string) => {
               outputContent.push({
                 type: output.startsWith("data:image/png;base64") ? "image" : "text",
                 value: output,
               });
-            },
-          });
-
-          await currentPyodideInstance.loadPackagesFromImports(content, {
-            messageCallback: (message: string) => {
               setMetadata((metadata) => ({
                 ...metadata,
-                outputs: [
-                  ...metadata.outputs.filter((output) => output.id !== runId),
-                  {
-                    id: runId,
-                    contents: [{ type: "text", value: message }],
-                    status: "loading_packages",
-                  },
-                ],
+                outputs: metadata.outputs.map((out) =>
+                  out.id === runId ? { ...out, contents: [...outputContent] } : out
+                ),
               }));
             },
           });
 
+          updateMetadataStatus("loading_micropip");
+          await pyodide.loadPackage("micropip");
+          const micropip = pyodide.pyimport("micropip");
+
+          const importRegex = /\s*(?:import|from)\s+([\w.]+)/g;
+          const packages = new Set<string>();
+          let match;
+          while ((match = importRegex.exec(content)) !== null) {
+            const basePackage = match[1].split(".")[0];
+            packages.add(basePackage);
+          }
+
+          if (packages.size > 0) {
+            const packageList = Array.from(packages);
+            updateMetadataStatus(
+              "loading_packages",
+              `Installing: ${packageList.join(", ")}...`
+            );
+            try {
+              await micropip.install(packageList);
+            } catch (installError: any) {
+              console.error("Micropip installation failed:", installError);
+              throw new Error(
+                `Failed to install packages: ${packageList.join(", ")}. Error: ${installError.message}`
+              );
+            }
+          }
+
+          updateMetadataStatus("in_progress", "Setting up environment...");
           const requiredHandlers = detectRequiredHandlers(content);
           for (const handler of requiredHandlers) {
             if (OUTPUT_HANDLERS[handler as keyof typeof OUTPUT_HANDLERS]) {
-              await currentPyodideInstance.runPythonAsync(
+              await pyodide.runPythonAsync(
                 OUTPUT_HANDLERS[handler as keyof typeof OUTPUT_HANDLERS]
               );
 
               if (handler === "matplotlib") {
-                await currentPyodideInstance.runPythonAsync("setup_matplotlib_output()");
+                await pyodide.runPythonAsync("setup_matplotlib_output()");
               }
             }
           }
 
-          await currentPyodideInstance.runPythonAsync(content);
+          updateMetadataStatus("in_progress", "Executing code...");
+          await pyodide.runPythonAsync(content);
 
           setMetadata((metadata) => ({
             ...metadata,
@@ -182,13 +208,17 @@ export const codeBlock = new Block<"code", Metadata>({
             ],
           }));
         } catch (error: any) {
+          console.error("Code execution error:", error);
           setMetadata((metadata) => ({
             ...metadata,
             outputs: [
               ...metadata.outputs.filter((output) => output.id !== runId),
               {
                 id: runId,
-                contents: [{ type: "text", value: error.message }],
+                contents: [
+                  ...outputContent,
+                  { type: "text", value: `Error: ${error.message}` },
+                ],
                 status: "failed",
               },
             ],

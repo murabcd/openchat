@@ -111,6 +111,7 @@ const PureChatItem = ({
   onDelete: (chatId: string) => void;
   setOpenMobile: (open: boolean) => void;
 }) => {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const { visibilityType, setVisibilityType } = useChatVisibility({
     chatId: chat.chatId,
     initialVisibility: chat.visibility,
@@ -124,7 +125,7 @@ const PureChatItem = ({
         </Link>
       </SidebarMenuButton>
 
-      <DropdownMenu modal={true}>
+      <DropdownMenu modal={true} open={dropdownOpen} onOpenChange={setDropdownOpen}>
         <DropdownMenuTrigger asChild>
           <SidebarMenuAction
             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground mr-0.5"
@@ -177,7 +178,11 @@ const PureChatItem = ({
 
           <DropdownMenuItem
             className="cursor-pointer text-destructive focus:bg-destructive/15 focus:text-destructive dark:text-red-500"
-            onSelect={() => onDelete(chat.chatId)}
+            onSelect={(event) => {
+              event.preventDefault();
+              onDelete(chat.chatId);
+              setDropdownOpen(false);
+            }}
           >
             <Trash className="w-4 h-4" />
             <span>Delete</span>
@@ -220,9 +225,7 @@ export function SidebarHistory({
       loading: "Deleting...",
       success: () => {
         setShowDeleteDialog(false);
-        if (deleteId === id) {
-          router.push("/");
-        }
+        router.push("/");
         return "Chat deleted";
       },
       error: "Failed to delete chat",

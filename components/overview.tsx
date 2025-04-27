@@ -34,8 +34,8 @@ export const Overview = () => {
         className="mt-4"
       >
         <p className="font-medium text-sm text-muted-foreground">
-          Type questions, request code examples, or ask for explanations on any topic. If
-          you like the project, contribute or star it on{" "}
+          Type questions, request code, or ask for explanations on any topic. If you like
+          it, contribute or star on{" "}
           <Link
             className="underline underline-offset-4"
             href="https://github.com/muradpm/openchat"

@@ -22,7 +22,13 @@ export interface ConsoleOutputContent {
 
 export interface ConsoleOutput {
   id: string;
-  status: "in_progress" | "loading_packages" | "completed" | "failed";
+  status:
+    | "in_progress"
+    | "loading_packages"
+    | "loading_pyodide"
+    | "loading_micropip"
+    | "completed"
+    | "failed";
   contents: Array<ConsoleOutputContent>;
 }
 

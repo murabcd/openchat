@@ -290,7 +290,7 @@ function PureMultiModalInput({
                   onPressedChange={setIsWebSearchEnabled}
                   aria-label="Toggle web search"
                   disabled={isLoading}
-                  className="p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200 data-[state=on]:bg-zinc-200 data-[state=on]:text-zinc-900 data-[state=on]:dark:bg-zinc-900 data-[state=on]:dark:text-zinc-200"
+                  className="p-[7px] h-fit dark:border-zinc-700 text-zinc-900 dark:text-zinc-50 hover:bg-zinc-200 hover:text-zinc-900 dark:hover:bg-zinc-900 dark:hover:text-zinc-50 data-[state=on]:bg-zinc-200 data-[state=on]:text-zinc-900 data-[state=on]:dark:bg-zinc-900 data-[state=on]:dark:text-zinc-200"
                 >
                   <Globe className="w-4 h-4" />
                 </Toggle>
