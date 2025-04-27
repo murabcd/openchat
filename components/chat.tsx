@@ -26,6 +26,7 @@ interface ChatProps {
   selectedChatModel: string;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
+  isChatSelected: boolean;
 }
 
 export const Chat = ({
@@ -34,6 +35,7 @@ export const Chat = ({
   selectedChatModel,
   selectedVisibilityType,
   isReadonly,
+  isChatSelected,
 }: ChatProps) => {
   const votes = useQuery(api.chats.getVotesByChatId, { chatId: id }) || [];
 
@@ -73,6 +75,7 @@ export const Chat = ({
           selectedModelId={selectedChatModel}
           selectedVisibilityType={selectedVisibilityType}
           isReadonly={isReadonly}
+          isChatSelected={isChatSelected}
         />
 
         <Messages

@@ -46,16 +46,13 @@ export function VisibilitySelector({
   chatId,
   className,
   selectedVisibilityType,
+  isChatSelected,
 }: {
   chatId: string;
   selectedVisibilityType: VisibilityType;
+  isChatSelected: boolean;
 } & React.ComponentProps<typeof Button>) {
   const [open, setOpen] = useState(false);
-
-  const user = useQuery(api.users.getUser);
-  const chats = useQuery(api.chats.listChats, user ? { userId: user._id } : "skip");
-
-  const hasChats = chats && chats.length > 0;
 
   const { visibilityType, setVisibilityType } = useChatVisibility({
     chatId,
@@ -84,15 +81,18 @@ export function VisibilitySelector({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="start" className="min-w-[300px]">
-        {visibilities.map((visibility) => (
-          <DropdownMenuItem
-            key={visibility.id}
-            onSelect={() => {
-              if (visibility.id !== "public" || hasChats) {
+        {visibilities.map((visibility) => {
+          const isPublicOption = visibility.id === "public";
+          const isDisabled = isPublicOption && !isChatSelected;
+          return (
+            <DropdownMenuItem
+              key={visibility.id}
+              onSelect={() => {
+                if (isDisabled) return;
                 setVisibilityType(visibility.id);
                 setOpen(false);
 
-                if (visibility.id === "public") {
+                if (isPublicOption) {
                   const url = `${window.location.origin}/chat/${chatId}`;
                   navigator.clipboard
                     .writeText(url)
@@ -104,28 +104,28 @@ export function VisibilitySelector({
                       toast.error("Failed to copy link");
                     });
                 }
-              }
-            }}
-            className={cn(
-              "gap-4 group/item flex flex-row justify-between items-center",
-              visibility.id === "public" && !hasChats && "opacity-50 cursor-not-allowed"
-            )}
-            disabled={visibility.id === "public" && !hasChats}
-            data-active={visibility.id === visibilityType}
-          >
-            <div className="flex flex-col gap-1 items-start">
-              {visibility.label}
-              {visibility.description && (
-                <div className="text-xs text-muted-foreground">
-                  {visibility.description}
-                </div>
+              }}
+              className={cn(
+                "gap-4 group/item flex flex-row justify-between items-center",
+                isDisabled && "opacity-50 cursor-not-allowed"
               )}
-            </div>
-            <div className="text-foreground dark:text-foreground opacity-0 group-data-[active=true]/item:opacity-100">
-              <Check className="w-4 h-4" />
-            </div>
-          </DropdownMenuItem>
-        ))}
+              disabled={isDisabled}
+              data-active={visibility.id === visibilityType}
+            >
+              <div className="flex flex-col gap-1 items-start">
+                {visibility.label}
+                {visibility.description && (
+                  <div className="text-xs text-muted-foreground">
+                    {visibility.description}
+                  </div>
+                )}
+              </div>
+              <div className="text-foreground dark:text-foreground opacity-0 group-data-[active=true]/item:opacity-100">
+                <Check className="w-4 h-4" />
+              </div>
+            </DropdownMenuItem>
+          );
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   );

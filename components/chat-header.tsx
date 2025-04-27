@@ -23,11 +23,13 @@ function PureChatHeader({
   selectedModelId,
   selectedVisibilityType,
   isReadonly,
+  isChatSelected,
 }: {
   chatId: string;
   selectedModelId: string;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
+  isChatSelected: boolean;
 }) {
   const router = useRouter();
   const { open } = useSidebar();
@@ -66,6 +68,7 @@ function PureChatHeader({
           chatId={chatId}
           selectedVisibilityType={selectedVisibilityType}
           className="order-1 md:order-3"
+          isChatSelected={isChatSelected}
         />
       )}
 
