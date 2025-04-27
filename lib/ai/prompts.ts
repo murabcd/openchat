@@ -36,7 +36,7 @@ export const regularPrompt =
 
 export const systemPrompt = ({ selectedChatModel }: { selectedChatModel: string }) => {
   if (selectedChatModel === "chat-model-reasoning") {
-    return regularPrompt;
+    return `${regularPrompt}\n\nYou should use <think> tags to outline your reasoning step-by-step before providing the final answer.`;
   } else {
     return `${regularPrompt}\n\n${blocksPrompt}`;
   }

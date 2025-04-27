@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { ChevronDown, Loader } from "lucide-react";
+import { ChevronDown, LoaderCircle } from "lucide-react";
 
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -37,13 +37,14 @@ export function MessageReasoning({ isLoading, reasoning }: MessageReasoningProps
         <div className="flex flex-row gap-2 items-center">
           <div className="font-medium">Reasoning</div>
           <div className="animate-spin">
-            <Loader className="w-4 h-4" />
+            <LoaderCircle className="w-4 h-4" />
           </div>
         </div>
       ) : (
         <div className="flex flex-row gap-2 items-center">
           <div className="font-medium">Reasoned for a few seconds</div>
           <div
+            data-testid="message-reasoning-toggle"
             className="cursor-pointer"
             onClick={() => {
               setIsExpanded(!isExpanded);
@@ -57,6 +58,7 @@ export function MessageReasoning({ isLoading, reasoning }: MessageReasoningProps
       <AnimatePresence initial={false}>
         {isExpanded && (
           <motion.div
+            data-testid="message-reasoning"
             key="content"
             initial="collapsed"
             animate="expanded"

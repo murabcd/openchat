@@ -1,6 +1,6 @@
 import { memo } from "react";
 
-import { File, Loader, MessageCircle, Pencil } from "lucide-react";
+import { File, LoaderCircle, MessageCircle, Pencil } from "lucide-react";
 
 import { toast } from "sonner";
 
@@ -133,7 +133,7 @@ function PureDocumentToolCall({ type, args, isReadonly }: DocumentToolCallProps)
       </div>
 
       <div className="animate-spin mt-1">
-        <Loader className="w-4 h-4" />
+        <LoaderCircle className="w-4 h-4" />
       </div>
     </button>
   );

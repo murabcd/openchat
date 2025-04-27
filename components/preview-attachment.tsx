@@ -1,6 +1,6 @@
 import type { Attachment } from "ai";
 
-import { Loader } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 
 export const PreviewAttachment = ({
   attachment,
@@ -33,7 +33,7 @@ export const PreviewAttachment = ({
 
         {isUploading && (
           <div className="animate-spin absolute text-zinc-500">
-            <Loader className="w-4 h-4" />
+            <LoaderCircle className="w-4 h-4" />
           </div>
         )}
       </div>

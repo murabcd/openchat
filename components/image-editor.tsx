@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -65,7 +65,7 @@ export function ImageEditor({ title, content, status, isInline }: ImageEditorPro
         <div className="flex flex-row gap-4 items-center">
           {!isInline && (
             <div className="animate-spin">
-              <Loader className="w-4 h-4" />
+              <LoaderCircle className="w-4 h-4" />
             </div>
           )}
           <div>Generating image...</div>
