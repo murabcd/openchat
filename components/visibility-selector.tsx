@@ -4,7 +4,8 @@ import { ReactNode, useMemo, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
-import { Check, ChevronDown, Globe, Lock } from "lucide-react";
+import { Check, ChevronDown, LockOpen, Lock } from "lucide-react";
+import { toast } from "sonner";
 
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
 
@@ -37,7 +38,7 @@ const visibilities: Array<{
     id: "public",
     label: "Public",
     description: "Anyone with the link can access this chat",
-    icon: <Globe className="w-4 h-4" />,
+    icon: <LockOpen className="w-4 h-4" />,
   },
 ];
 
@@ -90,6 +91,19 @@ export function VisibilitySelector({
               if (visibility.id !== "public" || hasChats) {
                 setVisibilityType(visibility.id);
                 setOpen(false);
+
+                if (visibility.id === "public") {
+                  const url = `${window.location.origin}/chat/${chatId}`;
+                  navigator.clipboard
+                    .writeText(url)
+                    .then(() => {
+                      toast("Link copied to clipboard");
+                    })
+                    .catch((err) => {
+                      console.error("Failed to copy link: ", err);
+                      toast.error("Failed to copy link");
+                    });
+                }
               }
             }}
             className={cn(

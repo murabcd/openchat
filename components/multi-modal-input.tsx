@@ -33,6 +33,13 @@ import equal from "fast-deep-equal";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 function PureMultiModalInput({
   chatId,
   input,
@@ -262,25 +269,63 @@ function PureMultiModalInput({
         }}
       />
 
-      <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start gap-1">
-        <AttachmentsButton fileInputRef={fileInputRef} isLoading={isLoading} />
-        <Toggle
-          size="sm"
-          pressed={isWebSearchEnabled}
-          onPressedChange={setIsWebSearchEnabled}
-          aria-label="Toggle web search"
-          disabled={isLoading}
-          className="p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200 data-[state=on]:bg-primary/10 data-[state=on]:dark:bg-primary/20"
-        >
-          <Globe className="w-4 h-4" />
-        </Toggle>
-      </div>
+      <TooltipProvider delayDuration={0}>
+        <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start gap-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <AttachmentsButton fileInputRef={fileInputRef} isLoading={isLoading} />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Add image</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <Toggle
+                  size="sm"
+                  pressed={isWebSearchEnabled}
+                  onPressedChange={setIsWebSearchEnabled}
+                  aria-label="Toggle web search"
+                  disabled={isLoading}
+                  className="p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200 data-[state=on]:bg-zinc-200 data-[state=on]:text-zinc-900 data-[state=on]:dark:bg-zinc-900 data-[state=on]:dark:text-zinc-200"
+                >
+                  <Globe className="w-4 h-4" />
+                </Toggle>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{isWebSearchEnabled ? "Disable web search" : "Enable web search"}</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </TooltipProvider>
 
       <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
         {isLoading ? (
-          <StopButton stop={stop} setMessages={setMessages} />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <StopButton stop={stop} setMessages={setMessages} />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Stop generating</p>
+            </TooltipContent>
+          </Tooltip>
         ) : (
-          <SendButton input={input} submitForm={submitForm} uploadQueue={uploadQueue} />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <SendButton
+                input={input}
+                submitForm={submitForm}
+                uploadQueue={uploadQueue}
+              />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Send message</p>
+            </TooltipContent>
+          </Tooltip>
         )}
       </div>
     </div>

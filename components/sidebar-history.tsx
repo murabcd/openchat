@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState, useMemo } from "react";
+import { memo, useState, useMemo, Dispatch, SetStateAction } from "react";
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -49,6 +49,8 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Doc } from "@/convex/_generated/dataModel";
 
+import { ChatSearchCommand } from "./chat-search-command";
+
 type Chat = {
   title: string;
   visibility: VisibilityType;
@@ -63,6 +65,39 @@ type GroupedChats = {
   lastWeek: Chat[];
   lastMonth: Chat[];
   older: Chat[];
+};
+
+const groupChatsByDate = (chats: Chat[]): GroupedChats => {
+  const now = new Date();
+  const oneWeekAgo = subWeeks(now, 1);
+  const oneMonthAgo = subMonths(now, 1);
+
+  return chats.reduce(
+    (groups, chat) => {
+      const chatDate = new Date(chat.createdAt);
+
+      if (isToday(chatDate)) {
+        groups.today.push(chat);
+      } else if (isYesterday(chatDate)) {
+        groups.yesterday.push(chat);
+      } else if (chatDate > oneWeekAgo) {
+        groups.lastWeek.push(chat);
+      } else if (chatDate > oneMonthAgo) {
+        groups.lastMonth.push(chat);
+      } else {
+        groups.older.push(chat);
+      }
+
+      return groups;
+    },
+    {
+      today: [],
+      yesterday: [],
+      lastWeek: [],
+      lastMonth: [],
+      older: [],
+    } as GroupedChats
+  );
 };
 
 const PureChatItem = ({
@@ -121,6 +156,16 @@ const PureChatItem = ({
                   className="cursor-pointer flex-row justify-between"
                   onClick={() => {
                     setVisibilityType("public");
+                    const url = `${window.location.origin}/chat/${chat.chatId}`;
+                    navigator.clipboard
+                      .writeText(url)
+                      .then(() => {
+                        toast("Link copied to clipboard");
+                      })
+                      .catch((err) => {
+                        console.error("Failed to copy link: ", err);
+                        toast.error("Failed to copy link");
+                      });
                   }}
                 >
                   Public
@@ -148,7 +193,19 @@ export const ChatItem = memo(PureChatItem, (prevProps, nextProps) => {
   return true;
 });
 
-export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
+interface SidebarHistoryProps {
+  user: Doc<"users"> | null;
+  openCommandDialog: boolean;
+  setOpenCommandDialog: Dispatch<SetStateAction<boolean>>;
+  onSelectChat: (chatId: string) => void;
+}
+
+export function SidebarHistory({
+  user,
+  openCommandDialog,
+  setOpenCommandDialog,
+  onSelectChat,
+}: SidebarHistoryProps) {
   const { setOpenMobile } = useSidebar();
   const { id } = useParams();
   const router = useRouter();
@@ -230,39 +287,6 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
       </SidebarGroup>
     );
   }
-
-  const groupChatsByDate = (chats: Chat[]): GroupedChats => {
-    const now = new Date();
-    const oneWeekAgo = subWeeks(now, 1);
-    const oneMonthAgo = subMonths(now, 1);
-
-    return chats.reduce(
-      (groups, chat) => {
-        const chatDate = new Date(chat.createdAt);
-
-        if (isToday(chatDate)) {
-          groups.today.push(chat);
-        } else if (isYesterday(chatDate)) {
-          groups.yesterday.push(chat);
-        } else if (chatDate > oneWeekAgo) {
-          groups.lastWeek.push(chat);
-        } else if (chatDate > oneMonthAgo) {
-          groups.lastMonth.push(chat);
-        } else {
-          groups.older.push(chat);
-        }
-
-        return groups;
-      },
-      {
-        today: [],
-        yesterday: [],
-        lastWeek: [],
-        lastMonth: [],
-        older: [],
-      } as GroupedChats
-    );
-  };
 
   return (
     <>
@@ -395,6 +419,13 @@ export function SidebarHistory({ user }: { user: Doc<"users"> | null }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ChatSearchCommand
+        open={openCommandDialog}
+        onOpenChange={setOpenCommandDialog}
+        history={history}
+        onSelectChat={onSelectChat}
+      />
     </>
   );
 }
