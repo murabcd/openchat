@@ -17,9 +17,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { api } from "@/convex/_generated/api";
-import { useQuery } from "convex/react";
-
 export type VisibilityType = "private" | "public";
 
 const visibilities: Array<{

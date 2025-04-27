@@ -3,7 +3,7 @@
 import { memo } from "react";
 
 import { UseChatHelpers } from "@ai-sdk/react";
-import { Code, Lightbulb, ScanText, ThermometerSun } from "lucide-react";
+import { Code, Lightbulb, Text, ThermometerSun } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -22,16 +22,16 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
       icon: <Code className="w-4 h-4 mr-2" />,
     },
     {
-      title: "Explain",
-      label: "the theory of relativity",
-      action: "Explain the theory of relativity in simple terms",
+      title: "Search",
+      label: "the latest news",
+      action: "Search for the latest news",
       icon: <Lightbulb className="w-4 h-4 mr-2" />,
     },
     {
       title: "Summarize",
       label: "the plot of Hamlet",
       action: "Summarize the plot of Hamlet briefly",
-      icon: <ScanText className="w-4 h-4 mr-2" />,
+      icon: <Text className="w-4 h-4 mr-2" />,
     },
     {
       title: "Weather",
@@ -57,10 +57,15 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
             onClick={async () => {
               window.history.replaceState({}, "", `/chat/${chatId}`);
 
-              append({
-                role: "user",
-                content: suggestedAction.action,
-              });
+              append(
+                {
+                  role: "user",
+                  content: suggestedAction.action,
+                },
+                suggestedAction.title === "Search"
+                  ? { data: { useWebSearch: true } }
+                  : undefined
+              );
             }}
             className="text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start"
           >

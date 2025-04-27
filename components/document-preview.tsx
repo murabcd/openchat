@@ -2,7 +2,7 @@
 
 import { memo, MouseEvent, useCallback, useEffect, useMemo, useRef } from "react";
 
-import { File, Fullscreen, Image, LoaderCircle } from "lucide-react";
+import { Text, Maximize2, Image, LoaderCircle } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -135,7 +135,7 @@ const LoadingSkeleton = ({ blockKind }: { blockKind: BlockKind }) => (
         <div className="animate-pulse rounded-lg h-4 bg-muted-foreground/20 w-24" />
       </div>
       <div>
-        <Fullscreen className="w-4 h-4" />
+        <Maximize2 className="w-4 h-4" />
       </div>
     </div>
     {blockKind === "image" ? (
@@ -194,7 +194,7 @@ const PureHitboxLayer = ({
     >
       <div className="w-full p-4 flex justify-end items-center">
         <div className="absolute right-[9px] top-[13px] p-2 hover:dark:bg-zinc-700 rounded-md hover:bg-zinc-100">
-          <Fullscreen className="w-4 h-4" />
+          <Maximize2 className="w-4 h-4" />
         </div>
       </div>
     </div>
@@ -226,7 +226,7 @@ const PureDocumentHeader = ({
           // eslint-disable-next-line jsx-a11y/alt-text
           <Image className="w-4 h-4" />
         ) : (
-          <File className="w-4 h-4" />
+          <Text className="w-4 h-4" />
         )}
       </div>
       <div className="-translate-y-1 sm:translate-y-0 font-medium">{title}</div>
