@@ -14,11 +14,9 @@ const OUTPUT_HANDLERS = {
     import base64
     from matplotlib import pyplot as plt
 
-    # Clear any existing plots
     plt.clf()
     plt.close('all')
 
-    # Switch to agg backend
     plt.switch_backend('agg')
 
     def setup_matplotlib_output():
@@ -40,7 +38,7 @@ const OUTPUT_HANDLERS = {
         plt.show = custom_show
   `,
   basic: `
-    # Basic output capture setup
+    
   `,
 };
 
@@ -57,8 +55,6 @@ function detectRequiredHandlers(code: string): string[] {
 interface Metadata {
   outputs: Array<ConsoleOutput>;
 }
-
-type ConsoleStatus = ConsoleOutput["status"];
 
 export const codeBlock = new Block<"code", Metadata>({
   kind: "code",
@@ -107,94 +103,70 @@ export const codeBlock = new Block<"code", Metadata>({
   },
   actions: [
     {
-      icon: <Play className="w-4 h-4" />,
+      icon: <Play className="w" />,
       label: "Run",
       description: "Execute code",
       onClick: async ({ content, setMetadata }) => {
         const runId = generateUUID();
         const outputContent: Array<ConsoleOutputContent> = [];
 
-        const updateMetadataStatus = (status: ConsoleStatus, message?: string) => {
-          setMetadata((metadata) => ({
-            ...metadata,
-            outputs: [
-              ...metadata.outputs.filter((output) => output.id !== runId),
-              {
-                id: runId,
-                contents: message ? [{ type: "text", value: message }] : [],
-                status: status,
-              },
-            ],
-          }));
-        };
-
-        updateMetadataStatus("in_progress", "Starting...");
+        setMetadata((metadata) => ({
+          ...metadata,
+          outputs: [
+            ...metadata.outputs,
+            {
+              id: runId,
+              contents: [],
+              status: "in_progress",
+            },
+          ],
+        }));
 
         try {
-          updateMetadataStatus("loading_pyodide");
-          const pyodide = await (globalThis as any).loadPyodide({
-            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.23.4/full/",
+          // @ts-expect-error - loadPyodide is not defined
+          const currentPyodideInstance = await globalThis.loadPyodide({
+            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.27.5/full/",
           });
 
-          pyodide.setStdout({
+          currentPyodideInstance.setStdout({
             batched: (output: string) => {
               outputContent.push({
                 type: output.startsWith("data:image/png;base64") ? "image" : "text",
                 value: output,
               });
+            },
+          });
+
+          await currentPyodideInstance.loadPackagesFromImports(content, {
+            messageCallback: (message: string) => {
               setMetadata((metadata) => ({
                 ...metadata,
-                outputs: metadata.outputs.map((out) =>
-                  out.id === runId ? { ...out, contents: [...outputContent] } : out
-                ),
+                outputs: [
+                  ...metadata.outputs.filter((output) => output.id !== runId),
+                  {
+                    id: runId,
+                    contents: [{ type: "text", value: message }],
+                    status: "loading_packages",
+                  },
+                ],
               }));
             },
           });
 
-          updateMetadataStatus("loading_micropip");
-          await pyodide.loadPackage("micropip");
-          const micropip = pyodide.pyimport("micropip");
-
-          const importRegex = /\s*(?:import|from)\s+([\w.]+)/g;
-          const packages = new Set<string>();
-          let match;
-          while ((match = importRegex.exec(content)) !== null) {
-            const basePackage = match[1].split(".")[0];
-            packages.add(basePackage);
-          }
-
-          if (packages.size > 0) {
-            const packageList = Array.from(packages);
-            updateMetadataStatus(
-              "loading_packages",
-              `Installing: ${packageList.join(", ")}...`
-            );
-            try {
-              await micropip.install(packageList);
-            } catch (installError: any) {
-              console.error("Micropip installation failed:", installError);
-              throw new Error(
-                `Failed to install packages: ${packageList.join(", ")}. Error: ${installError.message}`
-              );
-            }
-          }
-
-          updateMetadataStatus("in_progress", "Setting up environment...");
           const requiredHandlers = detectRequiredHandlers(content);
           for (const handler of requiredHandlers) {
             if (OUTPUT_HANDLERS[handler as keyof typeof OUTPUT_HANDLERS]) {
-              await pyodide.runPythonAsync(
+              await currentPyodideInstance.runPythonAsync(
                 OUTPUT_HANDLERS[handler as keyof typeof OUTPUT_HANDLERS]
               );
 
               if (handler === "matplotlib") {
-                await pyodide.runPythonAsync("setup_matplotlib_output()");
+                await currentPyodideInstance.runPythonAsync("setup_matplotlib_output()");
               }
             }
           }
 
-          updateMetadataStatus("in_progress", "Executing code...");
-          await pyodide.runPythonAsync(content);
+          await currentPyodideInstance.runPythonAsync(content);
 
           setMetadata((metadata) => ({
             ...metadata,
