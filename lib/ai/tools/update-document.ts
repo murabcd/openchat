@@ -10,9 +10,10 @@ import { api } from "@/convex/_generated/api";
 interface UpdateDocumentProps {
   user: Doc<"users">;
   dataStream: DataStreamWriter;
+  chatId: string;
 }
 
-export const updateDocument = ({ user, dataStream }: UpdateDocumentProps) =>
+export const updateDocument = ({ user, dataStream, chatId }: UpdateDocumentProps) =>
   tool({
     description: "Update a document with the given description.",
     parameters: z.object({
@@ -48,6 +49,7 @@ export const updateDocument = ({ user, dataStream }: UpdateDocumentProps) =>
         description,
         dataStream,
         user: user._id,
+        chatId,
       });
 
       dataStream.writeData({ type: "finish", content: "" });

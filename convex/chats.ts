@@ -56,7 +56,7 @@ export const deleteChatById = mutation({
 
     const documents = await ctx.db
       .query("documents")
-      .withIndex("by_documentId", (q) => q.eq("documentId", args.id))
+      .withIndex("by_chatId", (q) => q.eq("chatId", args.id))
       .collect();
 
     await Promise.all([

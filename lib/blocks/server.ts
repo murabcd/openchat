@@ -17,6 +17,7 @@ type Document = {
   kind: BlockKind;
   documentId: string;
   userId: Doc<"users">["_id"];
+  chatId?: string;
 };
 
 export interface SaveDocumentProps {
@@ -25,6 +26,7 @@ export interface SaveDocumentProps {
   kind: BlockKind;
   content: string;
   userId: string;
+  chatId?: string;
 }
 
 export interface CreateDocumentCallbackProps {
@@ -32,6 +34,7 @@ export interface CreateDocumentCallbackProps {
   title: string;
   dataStream: DataStreamWriter;
   user: Doc<"users">["_id"];
+  chatId?: string;
 }
 
 export interface UpdateDocumentCallbackProps {
@@ -39,6 +42,7 @@ export interface UpdateDocumentCallbackProps {
   description: string;
   dataStream: DataStreamWriter;
   user: Doc<"users">["_id"];
+  chatId?: string;
 }
 
 export interface DocumentHandler<T = BlockKind> {
@@ -60,6 +64,7 @@ export function createDocumentHandler<T extends BlockKind>(config: {
         title: args.title,
         dataStream: args.dataStream,
         user: args.user,
+        chatId: args.chatId,
       });
 
       if (args.user) {
@@ -69,6 +74,7 @@ export function createDocumentHandler<T extends BlockKind>(config: {
           content: draftContent,
           kind: config.kind,
           userId: args.user,
+          chatId: args.chatId,
         });
       }
 
@@ -80,6 +86,7 @@ export function createDocumentHandler<T extends BlockKind>(config: {
         description: args.description,
         dataStream: args.dataStream,
         user: args.user,
+        chatId: args.chatId,
       });
 
       if (args.user) {
@@ -89,6 +96,7 @@ export function createDocumentHandler<T extends BlockKind>(config: {
           content: draftContent,
           kind: config.kind,
           userId: args.user,
+          chatId: args.chatId,
         });
       }
 

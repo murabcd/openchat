@@ -11,9 +11,10 @@ import { Doc } from "@/convex/_generated/dataModel";
 interface CreateDocumentProps {
   user: Doc<"users">;
   dataStream: DataStreamWriter;
+  chatId: string;
 }
 
-export const createDocument = ({ user, dataStream }: CreateDocumentProps) =>
+export const createDocument = ({ user, dataStream, chatId }: CreateDocumentProps) =>
   tool({
     description:
       "Create a document for a writing or content creation activities. This tool will call other functions that will generate the contents of the document based on the title and kind.",
@@ -57,6 +58,7 @@ export const createDocument = ({ user, dataStream }: CreateDocumentProps) =>
         title,
         dataStream,
         user: user._id,
+        chatId,
       });
 
       dataStream.writeData({ type: "finish", content: "" });

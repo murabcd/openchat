@@ -49,9 +49,11 @@ export default defineSchema({
     ),
     documentId: v.string(),
     userId: v.id("users"),
+    chatId: v.optional(v.string()),
   })
     .index("by_userId", ["userId"])
-    .index("by_documentId", ["documentId"]),
+    .index("by_documentId", ["documentId"])
+    .index("by_chatId", ["chatId"]),
 
   suggestions: defineTable({
     originalText: v.string(),

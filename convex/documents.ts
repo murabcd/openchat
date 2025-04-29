@@ -13,6 +13,7 @@ export const saveDocument = mutation({
     ),
     content: v.string(),
     userId: v.id("users"),
+    chatId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("documents", args);
@@ -52,6 +53,7 @@ export const updateDocument = mutation({
       title: latestVersion.title,
       kind: latestVersion.kind,
       content: args.content ?? latestVersion.content,
+      chatId: latestVersion.chatId,
     });
 
     return newVersionId;

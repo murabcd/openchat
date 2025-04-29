@@ -107,8 +107,8 @@ export async function POST(request: Request) {
         experimental_telemetry: { isEnabled: true, functionId: "stream-text" },
         tools: {
           getWeather,
-          createDocument: createDocument({ user, dataStream }),
-          updateDocument: updateDocument({ user, dataStream }),
+          createDocument: createDocument({ user, dataStream, chatId: id }),
+          updateDocument: updateDocument({ user, dataStream, chatId: id }),
           requestSuggestions: requestSuggestions({ user, dataStream }),
           ...(data?.useWebSearch ? { webSearch: openai.tools.webSearchPreview() } : {}),
         },
