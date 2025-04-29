@@ -94,6 +94,36 @@ const components: Partial<Components> = {
       </h6>
     );
   },
+  table: ({ children, ...props }) => (
+    <div className="overflow-x-auto">
+      <table
+        className="table-auto border-collapse border-border w-full min-w-[600px] my-4"
+        {...props}
+      >
+        {children}
+      </table>
+    </div>
+  ),
+  thead: ({ children, ...props }) => <thead {...props}>{children}</thead>,
+  tbody: ({ children, ...props }) => <tbody {...props}>{children}</tbody>,
+  tr: ({ children, ...props }) => (
+    <tr className="border-border" {...props}>
+      {children}
+    </tr>
+  ),
+  th: ({ children, ...props }) => (
+    <th
+      className="border-b border-border px-2 py-1 text-left font-semibold text-sm"
+      {...props}
+    >
+      {children}
+    </th>
+  ),
+  td: ({ children, ...props }) => (
+    <td className="border-b border-border px-2 py-1 text-sm break-words" {...props}>
+      {children}
+    </td>
+  ),
 };
 
 const remarkPlugins = [remarkGfm];
