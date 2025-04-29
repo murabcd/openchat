@@ -50,7 +50,7 @@ export function MessageEditor({
   };
 
   return (
-    <div className="flex flex-col gap-2 w-full">
+    <div className="flex flex-col gap-2 w-full pr-2">
       <Textarea
         data-testid="message-editor"
         ref={textareaRef}

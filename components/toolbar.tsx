@@ -13,7 +13,7 @@ import {
 
 import { UseChatHelpers } from "@ai-sdk/react";
 
-import { cn, sanitizeUIMessages } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 import { AnimatePresence, motion, useMotionValue, useTransform } from "framer-motion";
 
@@ -420,7 +420,7 @@ const PureToolbar = ({
             className="p-3"
             onClick={() => {
               stop();
-              setMessages((messages) => sanitizeUIMessages(messages));
+              setMessages((messages) => messages);
             }}
           >
             <CircleStop className="w-4 h-4" />

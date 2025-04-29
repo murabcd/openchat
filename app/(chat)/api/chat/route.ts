@@ -4,6 +4,7 @@ import {
   smoothStream,
   streamText,
   type Attachment,
+  type UIMessage,
 } from "ai";
 
 import { myProvider } from "@/lib/ai/models";
@@ -76,10 +77,8 @@ export async function POST(request: Request) {
         messageId: userMessage.id,
         chatId: id,
         role: userMessage.role as "user" | "assistant",
-        content: userMessage.content,
-        experimental_attachments: (
-          userMessage as MessageWithAttachments
-        ).experimental_attachments
+        parts: [{ type: "text", text: userMessage.content }],
+        attachments: (userMessage as MessageWithAttachments).experimental_attachments
           ?.filter((att) => att.name !== undefined && att.contentType !== undefined)
           .map((att) => ({ ...att, name: att.name!, contentType: att.contentType! })),
       },
@@ -126,8 +125,8 @@ export async function POST(request: Request) {
                   messageId: message.id,
                   chatId: id,
                   role: message.role as "user" | "assistant",
-                  content: message.content,
-                  experimental_attachments: (
+                  parts: message.content as UIMessage["parts"],
+                  attachments: (
                     message as MessageWithAttachments
                   ).experimental_attachments
                     ?.filter(

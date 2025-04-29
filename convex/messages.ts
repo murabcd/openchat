@@ -43,8 +43,8 @@ export const saveMessages = mutation({
         messageId: v.string(),
         chatId: v.string(),
         role: v.union(v.literal("user"), v.literal("assistant"), v.literal("tool")),
-        content: v.any(),
-        experimental_attachments: v.optional(
+        parts: v.array(v.any()),
+        attachments: v.optional(
           v.array(
             v.object({
               url: v.string(),

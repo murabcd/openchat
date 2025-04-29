@@ -15,7 +15,7 @@ import {
 import type { Attachment, UIMessage } from "ai";
 import { UseChatHelpers } from "@ai-sdk/react";
 
-import { cn, sanitizeUIMessages } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 import { toast } from "sonner";
 import { useLocalStorage, useWindowSize } from "usehooks-ts";
@@ -379,7 +379,7 @@ function PureStopButton({
       onClick={(event) => {
         event.preventDefault();
         stop();
-        setMessages((messages) => sanitizeUIMessages(messages));
+        setMessages((messages) => messages);
       }}
     >
       <StopCircle className="w-4 h-4" />

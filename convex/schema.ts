@@ -21,11 +21,11 @@ export default defineSchema({
     .index("by_chatId", ["chatId"]),
 
   messages: defineTable({
-    content: v.any(),
-    role: v.union(v.literal("user"), v.literal("assistant"), v.literal("tool")),
-    chatId: v.string(),
     messageId: v.string(),
-    experimental_attachments: v.optional(
+    chatId: v.string(),
+    role: v.union(v.literal("user"), v.literal("assistant"), v.literal("tool")),
+    parts: v.array(v.any()),
+    attachments: v.optional(
       v.array(
         v.object({
           url: v.string(),
@@ -35,8 +35,8 @@ export default defineSchema({
       )
     ),
   })
-    .index("by_chatId", ["chatId"])
-    .index("by_messageId", ["messageId"]),
+    .index("by_messageId", ["messageId"])
+    .index("by_chatId", ["chatId"]),
 
   documents: defineTable({
     title: v.string(),
