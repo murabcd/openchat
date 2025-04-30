@@ -16,6 +16,7 @@ export default defineSchema({
     visibility: v.union(v.literal("private"), v.literal("public")),
     chatId: v.string(),
     userId: v.id("users"),
+    isPinned: v.optional(v.boolean()),
   })
     .index("by_userId", ["userId"])
     .index("by_chatId", ["chatId"]),

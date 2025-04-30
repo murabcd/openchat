@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { paginationOptsValidator } from "convex/server";
 
 export const saveChat = mutation({
   args: {
@@ -14,13 +15,18 @@ export const saveChat = mutation({
 });
 
 export const listChats = query({
-  args: { userId: v.id("users") },
+  args: {
+    userId: v.id("users"),
+    paginationOpts: paginationOptsValidator,
+  },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const result = await ctx.db
       .query("chats")
       .withIndex("by_userId", (q) => q.eq("userId", args.userId))
       .order("desc")
-      .collect();
+      .paginate(args.paginationOpts);
+
+    return result;
   },
 });
 
@@ -43,7 +49,6 @@ export const deleteChatById = mutation({
       .first();
     if (!chat) throw new Error("Chat not found");
 
-    // Get all messages for this chat
     const messages = await ctx.db
       .query("messages")
       .withIndex("by_chatId", (q) => q.eq("chatId", args.id))
@@ -120,5 +125,45 @@ export const updateChatVisiblityById = mutation({
     return await ctx.db.patch(chat._id, {
       visibility: args.visibility,
     });
+  },
+});
+
+export const togglePinChat = mutation({
+  args: {
+    chatId: v.string(),
+  },
+  returns: v.object({ isPinned: v.boolean() }),
+  handler: async (ctx, args) => {
+    const chat = await ctx.db
+      .query("chats")
+      .withIndex("by_chatId", (q) => q.eq("chatId", args.chatId))
+      .first();
+
+    if (!chat) {
+      throw new Error("Chat not found");
+    }
+
+    await ctx.db.patch(chat._id, { isPinned: !chat.isPinned });
+
+    return { isPinned: !chat.isPinned };
+  },
+});
+
+export const renameChat = mutation({
+  args: {
+    chatId: v.string(),
+    newTitle: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const chat = await ctx.db
+      .query("chats")
+      .withIndex("by_chatId", (q) => q.eq("chatId", args.chatId))
+      .first();
+
+    if (!chat) {
+      throw new Error("Chat not found");
+    }
+
+    await ctx.db.patch(chat._id, { title: args.newTitle });
   },
 });

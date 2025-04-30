@@ -1,23 +1,44 @@
 "use client";
 
-import { memo, useState, useMemo, Dispatch, SetStateAction } from "react";
+import {
+  memo,
+  useState,
+  useMemo,
+  Dispatch,
+  SetStateAction,
+  useRef,
+  useEffect,
+} from "react";
 
 import Link from "next/link";
+
 import { useParams, useRouter } from "next/navigation";
 
 import { isToday, isYesterday, subMonths, subWeeks } from "date-fns";
 
-import { Check, MoreHorizontal, Share2, Trash } from "lucide-react";
-
-import { toast } from "sonner";
+import {
+  Check,
+  MoreHorizontal,
+  Share2,
+  Trash,
+  Pencil,
+  Pin,
+  PinOff,
+  LoaderCircle,
+} from "lucide-react";
 
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
+import { useIntersectionObserver } from "usehooks-ts";
+
+import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuPortal,
+  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -45,17 +66,20 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, usePaginatedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Doc } from "@/convex/_generated/dataModel";
 
 import { ChatSearchCommand } from "./chat-search-command";
 
 type Chat = {
+  _id: Doc<"chats">["_id"];
+  _creationTime: number;
   title: string;
   visibility: VisibilityType;
   chatId: string;
   userId: Doc<"users">["_id"];
+  isPinned?: boolean;
   createdAt: number;
 };
 
@@ -74,7 +98,7 @@ const groupChatsByDate = (chats: Chat[]): GroupedChats => {
 
   return chats.reduce(
     (groups, chat) => {
-      const chatDate = new Date(chat.createdAt);
+      const chatDate = new Date(chat._creationTime);
 
       if (isToday(chatDate)) {
         groups.today.push(chat);
@@ -112,89 +136,188 @@ const PureChatItem = ({
   setOpenMobile: (open: boolean) => void;
 }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(chat.title);
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const { visibilityType, setVisibilityType } = useChatVisibility({
     chatId: chat.chatId,
     initialVisibility: chat.visibility,
   });
+  const renameChat = useMutation(api.chats.renameChat);
+  const togglePin = useMutation(api.chats.togglePinChat);
+
+  useEffect(() => {
+    if (isRenaming) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+  }, [isRenaming]);
+
+  const handleRenameSubmit = () => {
+    const newTitle = editingTitle.trim();
+    setIsRenaming(false);
+
+    if (newTitle && newTitle !== chat.title) {
+      toast.promise(renameChat({ chatId: chat.chatId, newTitle }), {
+        loading: "Renaming...",
+        success: "Chat renamed",
+        error: (err) => {
+          return `Failed to rename chat: ${err.message || "Unknown error"}`;
+        },
+      });
+    } else {
+      setEditingTitle(chat.title);
+    }
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      handleRenameSubmit();
+    } else if (event.key === "Escape") {
+      setEditingTitle(chat.title);
+      setIsRenaming(false);
+    }
+  };
+
+  const handleTogglePin = () => {
+    toast.promise(togglePin({ chatId: chat.chatId }), {
+      loading: chat.isPinned ? "Unpinning..." : "Pinning...",
+      success: (data) => (data.isPinned ? "Chat pinned" : "Chat unpinned"),
+      error: "Failed to update pin status",
+    });
+  };
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild isActive={isActive}>
-        <Link href={`/chat/${chat.chatId}`} onClick={() => setOpenMobile(false)}>
-          <span>{chat.title}</span>
-        </Link>
-      </SidebarMenuButton>
-
-      <DropdownMenu modal={true} open={dropdownOpen} onOpenChange={setDropdownOpen}>
-        <DropdownMenuTrigger asChild>
-          <SidebarMenuAction
-            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground mr-0.5"
-            showOnHover={!isActive}
+      {isRenaming ? (
+        <div className="flex items-center px-2 py-1.5 w-full">
+          <Input
+            ref={inputRef}
+            value={editingTitle}
+            onChange={(e) => setEditingTitle(e.target.value)}
+            onBlur={handleRenameSubmit}
+            onKeyDown={handleKeyDown}
+            className="h-7 focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-ring"
+          />
+        </div>
+      ) : (
+        <SidebarMenuButton asChild isActive={isActive}>
+          <Link
+            href={`/chat/${chat.chatId}`}
+            onClick={() => setOpenMobile(false)}
+            className="flex items-center justify-between"
           >
-            <MoreHorizontal className="w-4 h-4" />
-            <span className="sr-only">More</span>
-          </SidebarMenuAction>
-        </DropdownMenuTrigger>
+            <span className="truncate flex-1 mr-2">{chat.title}</span>
+          </Link>
+        </SidebarMenuButton>
+      )}
 
-        <DropdownMenuContent side="bottom" align="end">
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="cursor-pointer">
-              <Share2 className="w-4 h-4" />
-              <span>Share</span>
-            </DropdownMenuSubTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuSubContent>
-                <DropdownMenuItem
-                  className="cursor-pointer flex-row justify-between"
-                  onClick={() => {
-                    setVisibilityType("private");
-                  }}
-                >
-                  Private
-                  {visibilityType === "private" ? <Check className="w-4 h-4" /> : null}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer flex-row justify-between"
-                  onClick={() => {
-                    setVisibilityType("public");
-                    const url = `${window.location.origin}/chat/${chat.chatId}`;
-                    navigator.clipboard
-                      .writeText(url)
-                      .then(() => {
-                        toast("Link copied to clipboard");
-                      })
-                      .catch((err) => {
-                        console.error("Failed to copy link: ", err);
-                        toast.error("Failed to copy link");
-                      });
-                  }}
-                >
-                  Public
-                  {visibilityType === "public" ? <Check className="w-4 h-4" /> : null}
-                </DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuPortal>
-          </DropdownMenuSub>
+      {!isRenaming && (
+        <DropdownMenu modal={true} open={dropdownOpen} onOpenChange={setDropdownOpen}>
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuAction
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground mr-0.5"
+              showOnHover={!isActive}
+            >
+              <MoreHorizontal className="w-4 h-4" />
+              <span className="sr-only">More</span>
+            </SidebarMenuAction>
+          </DropdownMenuTrigger>
 
-          <DropdownMenuItem
-            className="cursor-pointer text-destructive focus:bg-destructive/15 focus:text-destructive dark:text-red-500"
-            onSelect={(event) => {
-              event.preventDefault();
-              onDelete(chat.chatId);
-              setDropdownOpen(false);
-            }}
-          >
-            <Trash className="w-4 h-4" />
-            <span>Delete</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          <DropdownMenuContent side="bottom" align="end">
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onSelect={(e) => {
+                e.preventDefault();
+                handleTogglePin();
+                setDropdownOpen(false);
+              }}
+            >
+              {chat.isPinned ? (
+                <PinOff className="w-4 h-4 mr-2" />
+              ) : (
+                <Pin className="w-4 h-4 mr-2" />
+              )}
+              <span>{chat.isPinned ? "Unpin" : "Pin"}</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="cursor-pointer">
+                <Share2 className="w-4 h-4 mr-2" />
+                <span>Share</span>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuPortal>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem
+                    className="cursor-pointer flex-row justify-between"
+                    onClick={() => {
+                      setVisibilityType("private");
+                    }}
+                  >
+                    Private
+                    {visibilityType === "private" ? <Check className="w-4 h-4" /> : null}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer flex-row justify-between"
+                    onClick={() => {
+                      setVisibilityType("public");
+                      const url = `${window.location.origin}/chat/${chat.chatId}`;
+                      navigator.clipboard
+                        .writeText(url)
+                        .then(() => {
+                          toast("Link copied to clipboard");
+                        })
+                        .catch((err) => {
+                          console.error("Failed to copy link: ", err);
+                          toast.error("Failed to copy link");
+                        });
+                    }}
+                  >
+                    Public
+                    {visibilityType === "public" ? <Check className="w-4 h-4" /> : null}
+                  </DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuPortal>
+            </DropdownMenuSub>
+
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onSelect={(event) => {
+                event.preventDefault();
+                setEditingTitle(chat.title);
+                setIsRenaming(true);
+                setDropdownOpen(false);
+              }}
+            >
+              <Pencil className="w-4 h-4 mr-2" />
+              <span>Rename</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem
+              className="cursor-pointer text-destructive focus:bg-destructive/15 focus:text-destructive dark:text-red-500"
+              onSelect={(event) => {
+                event.preventDefault();
+                onDelete(chat.chatId);
+                setDropdownOpen(false);
+              }}
+            >
+              <Trash className="w-4 h-4 mr-2" />
+              <span>Delete</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </SidebarMenuItem>
   );
 };
 
 export const ChatItem = memo(PureChatItem, (prevProps, nextProps) => {
   if (prevProps.isActive !== nextProps.isActive) return false;
+  if (prevProps.chat.title !== nextProps.chat.title) return false;
+  if (prevProps.chat.isPinned !== nextProps.chat.isPinned) return false;
   return true;
 });
 
@@ -204,6 +327,9 @@ interface SidebarHistoryProps {
   setOpenCommandDialog: Dispatch<SetStateAction<boolean>>;
   onSelectChat: (chatId: string) => void;
 }
+
+const INITIAL_CHATS_PER_PAGE = 30;
+const SUBSEQUENT_CHATS_PER_PAGE = 10;
 
 export function SidebarHistory({
   user,
@@ -218,30 +344,72 @@ export function SidebarHistory({
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+  const { results, status, loadMore } = usePaginatedQuery(
+    api.chats.listChats,
+    user ? { userId: user._id } : "skip",
+    { initialNumItems: INITIAL_CHATS_PER_PAGE }
+  );
+
+  const { ref: loadMoreRef, isIntersecting } = useIntersectionObserver({
+    threshold: 0.1,
+  });
+
+  useEffect(() => {
+    if (isIntersecting && status === "CanLoadMore") {
+      loadMore(SUBSEQUENT_CHATS_PER_PAGE);
+    }
+  }, [isIntersecting, status, loadMore]);
+
   const deleteChat = useMutation(api.chats.deleteChatById);
 
   const handleDelete = async () => {
-    toast.promise(deleteChat({ id: deleteId! }), {
+    if (!deleteId) return;
+    toast.promise(deleteChat({ id: deleteId }), {
       loading: "Deleting...",
       success: () => {
         setShowDeleteDialog(false);
-        router.push("/");
+        setDeleteId(null);
+        if (deleteId === id) {
+          router.push("/");
+        }
         return "Chat deleted";
       },
       error: "Failed to delete chat",
     });
   };
 
-  const chats = useQuery(api.chats.listChats, user ? { userId: user._id } : "skip");
-  const history = useMemo(() => {
-    return chats?.map((chat) => ({
+  const { allChats, pinnedChats, otherChatsGrouped } = useMemo(() => {
+    if (!results) return { allChats: [], pinnedChats: [], otherChatsGrouped: null };
+
+    const mappedChats: Chat[] = results.map((chat) => ({
+      _id: chat._id,
+      _creationTime: chat._creationTime,
       title: chat.title,
       visibility: chat.visibility,
-      createdAt: chat._creationTime,
       chatId: chat.chatId,
       userId: chat.userId,
+      isPinned: chat.isPinned ?? false,
+      createdAt: chat._creationTime,
     }));
-  }, [chats]);
+
+    mappedChats.sort((a, b) => {
+      const pinnedA = a.isPinned ?? false;
+      const pinnedB = b.isPinned ?? false;
+      if (pinnedA !== pinnedB) {
+        return pinnedA ? -1 : 1;
+      }
+      return b._creationTime - a._creationTime;
+    });
+
+    const pinned = mappedChats.filter((chat) => chat.isPinned);
+    const others = mappedChats.filter((chat) => !chat.isPinned);
+
+    return {
+      allChats: mappedChats,
+      pinnedChats: pinned,
+      otherChatsGrouped: groupChatsByDate(others),
+    };
+  }, [results]);
 
   if (!user) {
     return (
@@ -255,10 +423,10 @@ export function SidebarHistory({
     );
   }
 
-  if (history === undefined) {
+  if (status === "LoadingFirstPage") {
     return (
       <SidebarGroup>
-        <div className="px-2 py-1 text-xs text-sidebar-foreground/50">Today</div>
+        <div className="px-2 py-1 text-xs text-sidebar-foreground/50">Loading...</div>
         <SidebarGroupContent>
           <div className="flex flex-col">
             {[44, 32, 28, 64, 52].map((item) => (
@@ -279,7 +447,7 @@ export function SidebarHistory({
     );
   }
 
-  if (history?.length === 0) {
+  if (results && results.length === 0) {
     return (
       <SidebarGroup>
         <SidebarGroupContent>
@@ -293,120 +461,146 @@ export function SidebarHistory({
 
   return (
     <>
-      <SidebarGroup>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            {history &&
-              (() => {
-                const groupedChats = groupChatsByDate(history);
+      {pinnedChats.length > 0 && (
+        <SidebarGroup>
+          <div className="px-2 py-1 text-xs text-sidebar-foreground/50">Pinned</div>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {pinnedChats.map((chat) => (
+                <ChatItem
+                  key={chat._id}
+                  chat={chat}
+                  isActive={chat.chatId === id}
+                  onDelete={(chatId) => {
+                    setDeleteId(chatId);
+                    setShowDeleteDialog(true);
+                  }}
+                  setOpenMobile={setOpenMobile}
+                />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      )}
 
-                return (
-                  <>
-                    {groupedChats.today.length > 0 && (
-                      <>
-                        <div className="px-2 py-1 text-xs text-sidebar-foreground/50">
-                          Today
-                        </div>
-                        {groupedChats.today.map((chat) => (
-                          <ChatItem
-                            key={chat.chatId}
-                            chat={chat}
-                            isActive={chat.chatId === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
-                              setShowDeleteDialog(true);
-                            }}
-                            setOpenMobile={setOpenMobile}
-                          />
-                        ))}
-                      </>
-                    )}
+      {otherChatsGrouped &&
+        Object.values(otherChatsGrouped).some((group) => group.length > 0) && (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <div className="flex flex-col gap-6">
+                  {otherChatsGrouped.today.length > 0 && (
+                    <div>
+                      <div className="px-2 py-1 text-xs text-sidebar-foreground/50">
+                        Today
+                      </div>
+                      {otherChatsGrouped.today.map((chat) => (
+                        <ChatItem
+                          key={chat._id}
+                          chat={chat}
+                          isActive={chat.chatId === id}
+                          onDelete={(chatId) => {
+                            setDeleteId(chatId);
+                            setShowDeleteDialog(true);
+                          }}
+                          setOpenMobile={setOpenMobile}
+                        />
+                      ))}
+                    </div>
+                  )}
 
-                    {groupedChats.yesterday.length > 0 && (
-                      <>
-                        <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
-                          Yesterday
-                        </div>
-                        {groupedChats.yesterday.map((chat) => (
-                          <ChatItem
-                            key={chat.chatId}
-                            chat={chat}
-                            isActive={chat.chatId === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
-                              setShowDeleteDialog(true);
-                            }}
-                            setOpenMobile={setOpenMobile}
-                          />
-                        ))}
-                      </>
-                    )}
+                  {otherChatsGrouped.yesterday.length > 0 && (
+                    <div>
+                      <div className="px-2 py-1 text-xs text-sidebar-foreground/50">
+                        Yesterday
+                      </div>
+                      {otherChatsGrouped.yesterday.map((chat) => (
+                        <ChatItem
+                          key={chat._id}
+                          chat={chat}
+                          isActive={chat.chatId === id}
+                          onDelete={(chatId) => {
+                            setDeleteId(chatId);
+                            setShowDeleteDialog(true);
+                          }}
+                          setOpenMobile={setOpenMobile}
+                        />
+                      ))}
+                    </div>
+                  )}
 
-                    {groupedChats.lastWeek.length > 0 && (
-                      <>
-                        <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
-                          Last 7 days
-                        </div>
-                        {groupedChats.lastWeek.map((chat) => (
-                          <ChatItem
-                            key={chat.chatId}
-                            chat={chat}
-                            isActive={chat.chatId === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
-                              setShowDeleteDialog(true);
-                            }}
-                            setOpenMobile={setOpenMobile}
-                          />
-                        ))}
-                      </>
-                    )}
+                  {otherChatsGrouped.lastWeek.length > 0 && (
+                    <div>
+                      <div className="px-2 py-1 text-xs text-sidebar-foreground/50">
+                        Last 7 days
+                      </div>
+                      {otherChatsGrouped.lastWeek.map((chat) => (
+                        <ChatItem
+                          key={chat._id}
+                          chat={chat}
+                          isActive={chat.chatId === id}
+                          onDelete={(chatId) => {
+                            setDeleteId(chatId);
+                            setShowDeleteDialog(true);
+                          }}
+                          setOpenMobile={setOpenMobile}
+                        />
+                      ))}
+                    </div>
+                  )}
 
-                    {groupedChats.lastMonth.length > 0 && (
-                      <>
-                        <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
-                          Last 30 days
-                        </div>
-                        {groupedChats.lastMonth.map((chat) => (
-                          <ChatItem
-                            key={chat.chatId}
-                            chat={chat}
-                            isActive={chat.chatId === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
-                              setShowDeleteDialog(true);
-                            }}
-                            setOpenMobile={setOpenMobile}
-                          />
-                        ))}
-                      </>
-                    )}
+                  {otherChatsGrouped.lastMonth.length > 0 && (
+                    <div>
+                      <div className="px-2 py-1 text-xs text-sidebar-foreground/50">
+                        Last 30 days
+                      </div>
+                      {otherChatsGrouped.lastMonth.map((chat) => (
+                        <ChatItem
+                          key={chat._id}
+                          chat={chat}
+                          isActive={chat.chatId === id}
+                          onDelete={(chatId) => {
+                            setDeleteId(chatId);
+                            setShowDeleteDialog(true);
+                          }}
+                          setOpenMobile={setOpenMobile}
+                        />
+                      ))}
+                    </div>
+                  )}
 
-                    {groupedChats.older.length > 0 && (
-                      <>
-                        <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
-                          Older
-                        </div>
-                        {groupedChats.older.map((chat) => (
-                          <ChatItem
-                            key={chat.chatId}
-                            chat={chat}
-                            isActive={chat.chatId === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
-                              setShowDeleteDialog(true);
-                            }}
-                            setOpenMobile={setOpenMobile}
-                          />
-                        ))}
-                      </>
-                    )}
-                  </>
-                );
-              })()}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
+                  {otherChatsGrouped.older.length > 0 && (
+                    <div>
+                      <div className="px-2 py-1 text-xs text-sidebar-foreground/50">
+                        Older
+                      </div>
+                      {otherChatsGrouped.older.map((chat) => (
+                        <ChatItem
+                          key={chat._id}
+                          chat={chat}
+                          isActive={chat.chatId === id}
+                          onDelete={(chatId) => {
+                            setDeleteId(chatId);
+                            setShowDeleteDialog(true);
+                          }}
+                          setOpenMobile={setOpenMobile}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+      <div
+        ref={loadMoreRef}
+        className="h-10 w-full mt-4 flex justify-center items-center text-sm text-muted-foreground"
+      >
+        {status === "LoadingMore" && <LoaderCircle className="h-4 w-4 animate-spin" />}
+      </div>
+
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -426,7 +620,7 @@ export function SidebarHistory({
       <ChatSearchCommand
         open={openCommandDialog}
         onOpenChange={setOpenCommandDialog}
-        history={history}
+        history={allChats}
         onSelectChat={onSelectChat}
       />
     </>

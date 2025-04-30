@@ -76,7 +76,7 @@ export function PureMessageActions({
                   voteMessage({ chatId, messageId: message.id, type: "up" }),
                   {
                     loading: "Upvoting...",
-                    success: "Upvoted response",
+                    success: "Response upvoted",
                     error: "Failed to upvote response",
                   }
                 );
@@ -99,7 +99,7 @@ export function PureMessageActions({
                   voteMessage({ chatId, messageId: message.id, type: "down" }),
                   {
                     loading: "Downvoting...",
-                    success: "Downvoted response",
+                    success: "Response downvoted",
                     error: "Failed to downvote response",
                   }
                 );
