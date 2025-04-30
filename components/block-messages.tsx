@@ -7,7 +7,7 @@ import { Doc } from "@/convex/_generated/dataModel";
 import equal from "fast-deep-equal";
 
 import { PreviewMessage } from "@/components/message";
-import { useScrollToBottom } from "@/components/use-scroll-to-bottom";
+import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
 import { UIBlock } from "@/components/block";
 
 interface BlockMessagesProps {

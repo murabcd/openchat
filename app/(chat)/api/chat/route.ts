@@ -1,10 +1,9 @@
 import {
-  type Message,
+  UIMessage,
+  appendResponseMessages,
   createDataStreamResponse,
   smoothStream,
   streamText,
-  type Attachment,
-  type UIMessage,
 } from "ai";
 
 import { myProvider } from "@/lib/ai/models";
@@ -15,7 +14,7 @@ import { openai } from "@ai-sdk/openai";
 import {
   generateUUID,
   getMostRecentUserMessage,
-  sanitizeResponseMessages,
+  getTrailingMessageId,
 } from "@/lib/utils";
 
 import { createDocument } from "@/lib/ai/tools/create-document";
@@ -27,10 +26,6 @@ import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 
-interface MessageWithAttachments extends Message {
-  experimental_attachments?: Attachment[];
-}
-
 export const maxDuration = 60;
 
 export async function POST(request: Request) {
@@ -41,7 +36,7 @@ export async function POST(request: Request) {
     data,
   }: {
     id: string;
-    messages: Array<Message>;
+    messages: Array<UIMessage>;
     selectedChatModel: string;
     data?: { useWebSearch?: boolean };
   } = await request.json();
@@ -78,7 +73,7 @@ export async function POST(request: Request) {
         chatId: id,
         role: userMessage.role as "user" | "assistant",
         parts: [{ type: "text", text: userMessage.content }],
-        attachments: (userMessage as MessageWithAttachments).experimental_attachments
+        attachments: userMessage.experimental_attachments
           ?.filter((att) => att.name !== undefined && att.contentType !== undefined)
           .map((att) => ({ ...att, name: att.name!, contentType: att.contentType! })),
       },
@@ -112,32 +107,42 @@ export async function POST(request: Request) {
           requestSuggestions: requestSuggestions({ user, dataStream }),
           ...(data?.useWebSearch ? { webSearch: openai.tools.webSearchPreview() } : {}),
         },
-        onFinish: async ({ response, reasoning }) => {
+        onFinish: async ({ response }) => {
           if (user) {
             try {
-              const sanitizedResponseMessages = sanitizeResponseMessages({
-                messages: response.messages,
-                reasoning,
+              const assistantId = getTrailingMessageId({
+                messages: response.messages.filter(
+                  (message) => message.role === "assistant"
+                ),
+              });
+
+              if (!assistantId) {
+                throw new Error("No assistant message found!");
+              }
+
+              const [, assistantMessage] = appendResponseMessages({
+                messages: [userMessage],
+                responseMessages: response.messages,
               });
 
               await fetchMutation(api.messages.saveMessages, {
-                messages: sanitizedResponseMessages.map((message) => ({
-                  messageId: message.id,
-                  chatId: id,
-                  role: message.role as "user" | "assistant",
-                  parts: message.content as UIMessage["parts"],
-                  attachments: (
-                    message as MessageWithAttachments
-                  ).experimental_attachments
-                    ?.filter(
-                      (att) => att.name !== undefined && att.contentType !== undefined
-                    )
-                    .map((att) => ({
-                      ...att,
-                      name: att.name!,
-                      contentType: att.contentType!,
-                    })),
-                })),
+                messages: [
+                  {
+                    messageId: assistantId,
+                    chatId: id,
+                    role: assistantMessage.role as "user" | "assistant",
+                    parts: assistantMessage.parts as UIMessage["parts"],
+                    attachments: assistantMessage.experimental_attachments
+                      ?.filter(
+                        (att) => att.name !== undefined && att.contentType !== undefined
+                      )
+                      .map((att) => ({
+                        ...att,
+                        name: att.name!,
+                        contentType: att.contentType!,
+                      })),
+                  },
+                ],
               });
             } catch (error) {
               console.error("Failed to save chat messages:", error);

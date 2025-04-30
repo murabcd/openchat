@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import type { Attachment, Message } from "ai";
+import type { Attachment, UIMessage } from "ai";
 import { useChat } from "@ai-sdk/react";
 
 import { generateUUID } from "@/lib/utils";
@@ -22,7 +22,7 @@ import { api } from "@/convex/_generated/api";
 
 interface ChatProps {
   id: string;
-  initialMessages: Array<Message>;
+  initialMessages: Array<UIMessage>;
   selectedChatModel: string;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;

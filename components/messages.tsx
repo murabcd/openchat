@@ -4,7 +4,7 @@ import { UIMessage } from "ai";
 import { UseChatHelpers } from "@ai-sdk/react";
 import { Doc } from "@/convex/_generated/dataModel";
 
-import { useScrollToBottom } from "@/components/use-scroll-to-bottom";
+import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
 import { PreviewMessage, ThinkingMessage } from "@/components/message";
 import { Overview } from "@/components/overview";
 
