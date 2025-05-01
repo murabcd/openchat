@@ -19,12 +19,12 @@
 
 - [Next.js](https://nextjs.org) App Router
   - Advanced routing for seamless navigation and performance
-  - React Server Components (RSCs) and Server Actions for server-side rendering and increased performance
+  - React Server Components (RSCs) for server-side rendering and increased performance
 - [AI SDK](https://sdk.vercel.ai/docs)
   - Unified API for generating text, structured objects, and tool calls with LLMs
   - Hooks for building dynamic chat and generative user interfaces
-  - Supports OpenAI (default), Anthropic, Cohere, and other model providers
-- [shadcn/ui](https://ui.shadcn.com)
+  - Actions like generating code snippets, processing images, manipulating text content, interacting with spreadsheet
+- [Shadcn/ui](https://ui.shadcn.com)
   - Styling with [Tailwind CSS](https://tailwindcss.com)
   - Component primitives from [Radix UI](https://radix-ui.com) for accessibility and flexibility
 - Data Persistence
@@ -36,6 +36,10 @@
 ## Model Providers
 
 This app ships with [Openai](https://openai.com/) provider as the default. However, with the [AI SDK](https://sdk.vercel.ai/docs), you can switch LLM providers to [Ollama](https://ollama.com), [Anthropic](https://anthropic.com), [Cohere](https://cohere.com/), and [many more](https://sdk.vercel.ai/providers/ai-sdk-providers) with just a few lines of code.
+
+- Mini model (`gpt-4o-mini`): A fast and efficient model suitable for simple tasks
+- Large model (`gpt-4o`): A powerful model designed for complex tasks requiring deeper understanding
+- Reasoning model (`o4-mini` with reasoning middleware): An advanced model configured for multi-step reasoning tasks
 
 ## Deploy Your Own
 
