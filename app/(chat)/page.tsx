@@ -6,8 +6,12 @@ import { generateUUID } from "@/lib/utils";
 import { Chat } from "@/components/chat";
 import { DataStreamHandler } from "@/components/data-stream-handler";
 
+import { getCurrentUser } from "@/lib/auth";
+
 export default async function Page() {
   const id = generateUUID();
+
+  const user = await getCurrentUser();
 
   const cookieStore = await cookies();
   const modelIdFromCookie = cookieStore.get("chat-model");
@@ -23,6 +27,7 @@ export default async function Page() {
           selectedVisibilityType="private"
           isReadonly={false}
           isChatSelected={false}
+          user={user}
         />
         <DataStreamHandler id={id} />
       </>
@@ -39,6 +44,7 @@ export default async function Page() {
         selectedVisibilityType="private"
         isReadonly={false}
         isChatSelected={false}
+        user={user}
       />
       <DataStreamHandler id={id} />
     </>

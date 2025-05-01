@@ -23,7 +23,7 @@
 - [AI SDK](https://sdk.vercel.ai/docs)
   - Unified API for generating text, structured objects, and tool calls with LLMs
   - Hooks for building dynamic chat and generative user interfaces
-  - Actions like generating code snippets, processing images, manipulating text content, interacting with spreadsheet
+  - Assisting with a variety of tasks, including generating code, analyzing images, editing text, handling data, and searching the web
 - [Shadcn/ui](https://ui.shadcn.com)
   - Styling with [Tailwind CSS](https://tailwindcss.com)
   - Component primitives from [Radix UI](https://radix-ui.com) for accessibility and flexibility
@@ -39,7 +39,7 @@ This app ships with [Openai](https://openai.com/) provider as the default. Howev
 
 - Mini model (`gpt-4o-mini`): A fast and efficient model suitable for simple tasks
 - Large model (`gpt-4o`): A powerful model designed for complex tasks requiring deeper understanding
-- Reasoning model (`o4-mini` with reasoning middleware): An advanced model configured for multi-step reasoning tasks
+- Reasoning model (`o4-mini`): An advanced model configured for multi-step reasoning tasks
 
 ## Deploy Your Own
 

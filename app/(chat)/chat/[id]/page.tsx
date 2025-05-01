@@ -9,23 +9,21 @@ import { DataStreamHandler } from "@/components/data-stream-handler";
 
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
-import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
+
+import { getCurrentUser } from "@/lib/auth";
 
 export default async function ChatPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const { id: chatId } = params;
 
-  const chat = await fetchQuery(api.chats.getChatById, { chatId });
+  const [user, chat] = await Promise.all([
+    getCurrentUser(),
+    fetchQuery(api.chats.getChatById, { chatId }),
+  ]);
 
   if (!chat) {
     notFound();
   }
-
-  const token = await convexAuthNextjsToken().catch(() => null);
-
-  const user = token
-    ? await fetchQuery(api.users.getUser, {}, { token }).catch(() => null)
-    : null;
 
   if (chat.visibility === "private") {
     if (!user) {
@@ -52,6 +50,7 @@ export default async function ChatPage(props: { params: Promise<{ id: string }> 
           selectedVisibilityType={chat.visibility}
           isReadonly={user?._id !== chat.userId}
           isChatSelected={true}
+          user={user}
         />
         <DataStreamHandler id={chat.chatId} />
       </>
@@ -67,6 +66,7 @@ export default async function ChatPage(props: { params: Promise<{ id: string }> 
         selectedVisibilityType={chat.visibility}
         isReadonly={user?._id !== chat.userId}
         isChatSelected={true}
+        user={user}
       />
       <DataStreamHandler id={chat.chatId} />
     </>

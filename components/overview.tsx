@@ -1,8 +1,15 @@
 import Link from "next/link";
 
 import { motion } from "framer-motion";
+import { Doc } from "@/convex/_generated/dataModel";
 
-export const Overview = () => {
+interface OverviewProps {
+  user: Doc<"users"> | null;
+}
+
+export const Overview = ({ user }: OverviewProps) => {
+  const firstName = user?.name ? user.name.split(" ")[0] : null;
+
   return (
     <div
       key="overview"
@@ -15,7 +22,7 @@ export const Overview = () => {
         transition={{ delay: 0.5 }}
         className="text-2xl font-semibold"
       >
-        Hello there!
+        {firstName ? `Hello, ${firstName}.` : "Hello there!"}
       </motion.div>
       <motion.div
         initial={{ opacity: 0, y: 10 }}
