@@ -6,6 +6,8 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 import { getCurrentUser } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export default async function Layout({ children }: { children: React.ReactNode }) {
   const [user, cookieStore] = await Promise.all([getCurrentUser(), cookies()]);
   const isCollapsed = cookieStore.get("sidebar:state")?.value !== "true";

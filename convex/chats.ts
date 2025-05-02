@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { paginationOptsValidator } from "convex/server";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 export const saveChat = mutation({
   args: {
@@ -165,5 +166,47 @@ export const renameChat = mutation({
     }
 
     await ctx.db.patch(chat._id, { title: args.newTitle });
+  },
+});
+
+export const deleteAllUserChats = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("User not authenticated");
+    }
+
+    const userChats = await ctx.db
+      .query("chats")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect();
+
+    const deletePromises: Promise<any>[] = [];
+
+    for (const chat of userChats) {
+      const messages = await ctx.db
+        .query("messages")
+        .withIndex("by_chatId", (q) => q.eq("chatId", chat.chatId))
+        .collect();
+      const votes = await ctx.db
+        .query("votes")
+        .withIndex("by_chatId", (q) => q.eq("chatId", chat.chatId))
+        .collect();
+      const documents = await ctx.db
+        .query("documents")
+        .withIndex("by_chatId", (q) => q.eq("chatId", chat.chatId))
+        .collect();
+
+      messages.forEach((msg) => deletePromises.push(ctx.db.delete(msg._id)));
+      votes.forEach((vote) => deletePromises.push(ctx.db.delete(vote._id)));
+      documents.forEach((doc) => deletePromises.push(ctx.db.delete(doc._id)));
+
+      deletePromises.push(ctx.db.delete(chat._id));
+    }
+
+    await Promise.all(deletePromises);
+
+    return { deletedChatsCount: userChats.length };
   },
 });

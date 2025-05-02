@@ -189,7 +189,7 @@ const PureChatItem = ({
   };
 
   return (
-    <SidebarMenuItem>
+    <SidebarMenuItem className="mb-1">
       {isRenaming ? (
         <div className="flex items-center px-2 py-1.5 w-full">
           <Input
@@ -611,7 +611,7 @@ export function SidebarHistory({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="border-none">Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete}>Continue</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
