@@ -16,25 +16,13 @@ export default function LoginPage() {
     <div className="flex h-screen">
       <div className="hidden w-1/2 flex-col justify-start items-start gap-4 bg-muted/40 lg:flex p-4">
         <div className="flex items-center gap-2">
-          <Image
-            src="/logo-dark.svg"
-            alt="Logo"
-            width={25}
-            height={25}
-            className="dark:hidden"
-          />
-          <Image
-            src="/logo.svg"
-            alt="Logo"
-            width={25}
-            height={25}
-            className="hidden dark:block"
-          />
-          <span className="text-lg font-semibold">OpenChat</span>
+          <div className="flex flex-col">
+            <span className="text-lg font-semibold">OpenChat</span>
+            <p className="text-sm text-muted-foreground">
+              Bring your ideas to life using coding, images, text, data, and web search.
+            </p>
+          </div>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Bring ideas to life using coding, images, text, data, and web search.
-        </p>
       </div>
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-[350px] space-y-6">
