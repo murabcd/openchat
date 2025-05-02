@@ -48,7 +48,7 @@ export const Chat = ({
     handleSubmit,
     input,
     setInput,
-    isLoading,
+    status,
     stop,
     append,
     reload,
@@ -83,7 +83,7 @@ export const Chat = ({
 
         <Messages
           chatId={id}
-          isLoading={isLoading}
+          isLoading={status === "submitted"}
           votes={votes}
           messages={messages}
           setMessages={setMessages}
@@ -100,7 +100,7 @@ export const Chat = ({
               input={input}
               setInput={setInput}
               handleSubmit={handleSubmit}
-              isLoading={isLoading}
+              isLoading={status === "submitted"}
               stop={stop}
               attachments={attachments}
               setAttachments={setAttachments}
@@ -117,7 +117,7 @@ export const Chat = ({
         input={input}
         setInput={setInput}
         handleSubmit={handleSubmit}
-        isLoading={isLoading}
+        isLoading={status !== "streaming"}
         stop={stop}
         attachments={attachments}
         setAttachments={setAttachments}

@@ -19,7 +19,7 @@
 
 - [Next.js](https://nextjs.org) App Router
   - Advanced routing for seamless navigation and performance
-  - React Server Components (RSCs) for server-side rendering and increased performance
+  - React Server Components (RSCs) for server-side rendering and performance improvements
 - [AI SDK](https://sdk.vercel.ai/docs)
   - Unified API for generating text, structured objects, and tool calls with LLMs
   - Hooks for building dynamic chat and generative user interfaces
