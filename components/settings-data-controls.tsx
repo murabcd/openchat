@@ -34,14 +34,14 @@ const SettingsDataControls = () => {
 
   const handleDeleteAllChats = async () => {
     toast.promise(deleteAllChatsMutation({}), {
-      loading: "Deleting all chats...",
-      success: (result) => {
+      loading: "Deleting...",
+      success: () => {
         setShowDeleteChatsDialog(false);
-        return `Successfully deleted ${result.deletedChatsCount} chats.`;
+        return `Chats deleted`;
       },
       error: (err) => {
         setShowDeleteChatsDialog(false);
-        return `Failed to delete chats: ${err.message || "Unknown error"}`;
+        return `Failed to delete chats: ${err.message}`;
       },
     });
   };
@@ -53,7 +53,7 @@ const SettingsDataControls = () => {
         setShowDeleteAccountDialog(false);
         signOut();
         router.push("/");
-        return "Account deleted successfully.";
+        return "Account deleted";
       },
       error: (err) => {
         setShowDeleteAccountDialog(false);
@@ -64,9 +64,8 @@ const SettingsDataControls = () => {
 
   return (
     <div className="flex flex-col gap-4 pt-4 px-3">
-      {/* Delete All Chats */}
       <div className="flex items-center justify-between gap-4">
-        <span className="text-sm">Delete all chats</span>
+        <span className="text-sm">Delete chats</span>
         <AlertDialog open={showDeleteChatsDialog} onOpenChange={setShowDeleteChatsDialog}>
           <AlertDialogTrigger asChild>
             <Button

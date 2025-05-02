@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 
-import { ChevronUp } from "lucide-react";
+import { ChevronUp, Settings, Moon, Sun, LogOut } from "lucide-react";
 
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -60,24 +60,31 @@ export const SidebarUserNav = ({ user }: { user: Doc<"users"> }) => {
                   setIsSettingsOpen(true);
                 }}
               >
+                <Settings className="h-4 w-4 mr-2" />
                 <span>Settings</span>
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="cursor-pointer"
                 onSelect={() => setTheme(theme === "dark" ? "light" : "dark")}
               >
+                {theme === "light" ? (
+                  <Moon className="h-4 w-4 mr-2" />
+                ) : (
+                  <Sun className="h-4 w-4 mr-2" />
+                )}
                 {`${theme === "light" ? "Dark" : "Light"} mode`}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <button
                   type="button"
-                  className="w-full cursor-pointer"
+                  className="w-full cursor-pointer flex items-center"
                   onClick={() => {
                     signOut();
                     router.push("/");
                   }}
                 >
+                  <LogOut className="h-4 w-4 mr-2" />
                   Sign out
                 </button>
               </DropdownMenuItem>

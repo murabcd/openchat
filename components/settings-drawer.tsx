@@ -100,7 +100,7 @@ const SettingsDrawer = ({ open, onOpenChange, user }: SettingsSheetProps) => {
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="h-[70dvh]">
+      <DrawerContent className="h-[70dvh] rounded-lg">
         <DrawerHeader className="flex items-center justify-center relative gap-2 px-4 pt-4 pb-2">
           {currentView !== "main" && (
             <Button

@@ -71,7 +71,7 @@ export const sheetBlock = new Block<"sheet", Metadata>({
     },
     {
       icon: <Copy className="w-4 h-4" />,
-      description: "Copy as .csv",
+      description: "Copy as CSV",
       onClick: ({ content }) => {
         const parsed = parse<string[]>(content, { skipEmptyLines: true });
 
@@ -82,7 +82,7 @@ export const sheetBlock = new Block<"sheet", Metadata>({
         const cleanedCsv = unparse(nonEmptyRows);
 
         navigator.clipboard.writeText(cleanedCsv);
-        toast.success("Copied csv to clipboard");
+        toast.success("Copied to clipboard");
       },
     },
   ],

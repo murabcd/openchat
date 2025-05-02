@@ -43,20 +43,39 @@ export async function GET() {
         <div
           style={{
             display: "flex",
-            flexWrap: "wrap",
+            flexDirection: "column",
+            alignItems: "center",
             justifyContent: "center",
-            padding: "20px 50px",
-            margin: "0 42px",
-            fontSize: 40,
-            width: "auto",
-            maxWidth: 550,
             textAlign: "center",
-            backgroundColor: "black",
-            color: "white",
-            lineHeight: 1.4,
           }}
         >
-          Open-source chat app
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              padding: "20px 50px",
+              margin: "0 42px",
+              fontSize: 40,
+              width: "auto",
+              maxWidth: 550,
+              textAlign: "center",
+              backgroundColor: "black",
+              color: "white",
+              lineHeight: 1.4,
+            }}
+          >
+            OpenChat
+          </div>
+          <p
+            style={{
+              marginTop: 20,
+              fontSize: 24,
+              maxWidth: 550,
+            }}
+          >
+            Bring your ideas to life.
+          </p>
         </div>
       </div>
     ),
