@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 
-import { UserCog, PaintBucket, Database } from "lucide-react";
+import { UserCog, PaintBucket, Database, WandSparkles } from "lucide-react";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import type { Doc } from "@/convex/_generated/dataModel";
 import SettingsAccount from "./settings-account";
 import SettingsAppearance from "./settings-appearance";
 import SettingsDataControls from "./settings-data-controls";
+import SettingsPersonalization from "./settings-personalization";
 
 interface SettingsDialogProps {
   user: Doc<"users">;
@@ -19,7 +20,7 @@ interface SettingsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-type ActiveTab = "account" | "appearance" | "data";
+type ActiveTab = "account" | "appearance" | "data" | "personalization";
 
 const SettingsDialog = ({ user, open, onOpenChange }: SettingsDialogProps) => {
   const [activeTab, setActiveTab] = useState<ActiveTab>("account");
@@ -32,6 +33,8 @@ const SettingsDialog = ({ user, open, onOpenChange }: SettingsDialogProps) => {
         return <SettingsAppearance />;
       case "data":
         return <SettingsDataControls />;
+      case "personalization":
+        return <SettingsPersonalization />;
       default:
         return null;
     }
@@ -62,6 +65,22 @@ const SettingsDialog = ({ user, open, onOpenChange }: SettingsDialogProps) => {
                 )}
               />{" "}
               Account
+            </Button>
+            <Button
+              variant="ghost"
+              className={cn(
+                "justify-start gap-3 px-4 min-w-40 h-10 text-sm group",
+                activeTab === "personalization" && "bg-muted text-primary"
+              )}
+              onClick={() => setActiveTab("personalization")}
+            >
+              <WandSparkles
+                className={cn(
+                  "w-4 h-4 text-muted-foreground group-hover:text-primary",
+                  activeTab === "personalization" && "text-primary"
+                )}
+              />{" "}
+              Personalization
             </Button>
             <Button
               variant="ghost"

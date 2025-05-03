@@ -2,7 +2,14 @@
 
 import React, { useState } from "react";
 
-import { UserCog, PaintBucket, Database, ChevronRight, ArrowLeft } from "lucide-react";
+import {
+  UserCog,
+  PaintBucket,
+  Database,
+  ChevronRight,
+  ArrowLeft,
+  WandSparkles,
+} from "lucide-react";
 
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
@@ -12,6 +19,7 @@ import type { Doc } from "@/convex/_generated/dataModel";
 import AccountSettings from "./settings-account";
 import AppearanceSettings from "./settings-appearance";
 import DataControlsSettings from "./settings-data-controls";
+import PersonalizationSettings from "./settings-personalization";
 
 interface SettingsSheetProps {
   open: boolean;
@@ -19,13 +27,19 @@ interface SettingsSheetProps {
   user: Doc<"users">;
 }
 
-type SettingsView = "main" | "account" | "appearance" | "data";
+type SettingsView = "main" | "account" | "appearance" | "data" | "personalization";
 
 const SettingsDrawer = ({ open, onOpenChange, user }: SettingsSheetProps) => {
   const [currentView, setCurrentView] = useState<SettingsView>("main");
 
   const settingsItems = [
     { id: "account", label: "Account", icon: UserCog, view: "account" as SettingsView },
+    {
+      id: "personalization",
+      label: "Personalization",
+      icon: WandSparkles,
+      view: "personalization" as SettingsView,
+    },
     {
       id: "appearance",
       label: "Appearance",
@@ -74,6 +88,13 @@ const SettingsDrawer = ({ open, onOpenChange, user }: SettingsSheetProps) => {
         return (
           <div className="p-4">
             <DataControlsSettings />
+          </div>
+        );
+
+      case "personalization":
+        return (
+          <div className="p-4">
+            <PersonalizationSettings />
           </div>
         );
 
