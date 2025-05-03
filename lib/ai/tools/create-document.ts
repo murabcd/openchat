@@ -3,7 +3,6 @@ import { DataStreamWriter, tool } from "ai";
 import { z } from "zod";
 
 import { generateUUID } from "@/lib/utils";
-
 import { blockKinds, documentHandlersByBlockKind } from "@/lib/blocks/server";
 
 import { Doc } from "@/convex/_generated/dataModel";

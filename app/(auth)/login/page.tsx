@@ -18,7 +18,7 @@ export default function LoginPage() {
         <div className="flex items-center gap-2">
           <div className="flex flex-col">
             <span className="text-lg font-semibold">OpenChat</span>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground py-2">
               Bring your ideas to life using coding, images, text, data, and web search.
             </p>
           </div>

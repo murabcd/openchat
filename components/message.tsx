@@ -18,6 +18,7 @@ import { MessageEditor } from "@/components/message-editor";
 import { Markdown } from "@/components/markdown";
 import { PreviewAttachment } from "@/components/preview-attachment";
 import { MessageReasoning } from "@/components/message-reasoning";
+import { MessageMemorizing } from "@/components/message-memorizing";
 import { Weather } from "@/components/weather";
 import { DocumentToolCall, DocumentToolResult } from "@/components/document";
 import { DocumentPreview } from "@/components/document-preview";
@@ -182,7 +183,6 @@ const PurePreviewMessage = ({
 
                 if (state === "call") {
                   const { args } = toolInvocation;
-
                   return (
                     <div
                       key={toolCallId}
@@ -205,6 +205,16 @@ const PurePreviewMessage = ({
                           type="request-suggestions"
                           args={args}
                           isReadonly={isReadonly}
+                        />
+                      ) : toolName === "addResource" ? (
+                        <MessageMemorizing
+                          toolName={toolName}
+                          isLoading={state === "call"}
+                        />
+                      ) : toolName === "getInformation" ? (
+                        <MessageMemorizing
+                          toolName={toolName}
+                          isLoading={state === "call"}
                         />
                       ) : null}
                     </div>
@@ -231,6 +241,18 @@ const PurePreviewMessage = ({
                           type="request-suggestions"
                           result={result}
                           isReadonly={isReadonly}
+                        />
+                      ) : toolName === "addResource" ? (
+                        <MessageMemorizing
+                          toolName={toolName}
+                          isLoading={false}
+                          result={result}
+                        />
+                      ) : toolName === "getInformation" ? (
+                        <MessageMemorizing
+                          toolName={toolName}
+                          isLoading={false}
+                          result={result}
                         />
                       ) : (
                         <pre>{JSON.stringify(result, null, 2)}</pre>

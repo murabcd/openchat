@@ -30,6 +30,7 @@
 - Data Persistence
   - [Convex](https://www.convex.dev/) for saving chat history and user data
   - [Convex file storage](https://docs.convex.dev/file-storage) for efficient file storage
+  - [Convex Vector Search](https://docs.convex.dev/search/vector-search) for long-term memory storage and retrieval
 - [Convex Auth](https://labs.convex.dev/auth)
   - Simple and secure authentication
 

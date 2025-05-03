@@ -18,6 +18,7 @@ import type * as chats from "../chats.js";
 import type * as documents from "../documents.js";
 import type * as files from "../files.js";
 import type * as http from "../http.js";
+import type * as memories from "../memories.js";
 import type * as messages from "../messages.js";
 import type * as suggestions from "../suggestions.js";
 import type * as users from "../users.js";
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   documents: typeof documents;
   files: typeof files;
   http: typeof http;
+  memories: typeof memories;
   messages: typeof messages;
   suggestions: typeof suggestions;
   users: typeof users;

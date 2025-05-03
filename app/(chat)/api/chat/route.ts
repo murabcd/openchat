@@ -21,6 +21,7 @@ import { createDocument } from "@/lib/ai/tools/create-document";
 import { updateDocument } from "@/lib/ai/tools/update-document";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { getWeather } from "@/lib/ai/tools/get-weather";
+import { addResource, getInformation } from "@/lib/ai/tools/handle-memory";
 
 import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
@@ -95,6 +96,8 @@ export async function POST(request: Request) {
                 "createDocument",
                 "updateDocument",
                 "requestSuggestions",
+                "addResource",
+                "getInformation",
                 ...(data?.useWebSearch ? ["webSearch" as const] : []),
               ],
         experimental_transform: smoothStream({ chunking: "word" }),
@@ -105,6 +108,8 @@ export async function POST(request: Request) {
           createDocument: createDocument({ user, dataStream, chatId: id }),
           updateDocument: updateDocument({ user, dataStream, chatId: id }),
           requestSuggestions: requestSuggestions({ user, dataStream }),
+          addResource: addResource(token ?? null),
+          getInformation: getInformation(token ?? null),
           ...(data?.useWebSearch ? { webSearch: openai.tools.webSearchPreview() } : {}),
         },
         onFinish: async ({ response }) => {
@@ -145,7 +150,7 @@ export async function POST(request: Request) {
                 ],
               });
             } catch (error) {
-              console.error("Failed to save chat messages:", error);
+              console.error("[api/chat] Error saving assistant message:", error);
             }
           }
         },
@@ -155,8 +160,9 @@ export async function POST(request: Request) {
 
       result.mergeIntoDataStream(dataStream, { sendReasoning: true });
     },
-    onError: () => {
-      return "Oops, an error occurred";
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      return `Oops, an error occurred during streaming: ${errorMessage}`;
     },
   });
 }

@@ -14,6 +14,10 @@ export const myProvider = customProvider({
     "title-model": openai("gpt-4.1-nano"),
     "block-model": openai("gpt-4o-mini"),
   },
+  textEmbeddingModels: {
+    "text-embedding-3-small": openai.embedding("text-embedding-3-small"),
+    "text-embedding-3-large": openai.embedding("text-embedding-3-large"),
+  },
   imageModels: {
     "image-model-small": openai.image("dall-e-2"),
     "image-model-large": openai.image("dall-e-3"),

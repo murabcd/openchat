@@ -75,4 +75,17 @@ export default defineSchema({
   })
     .index("by_messageId", ["messageId"])
     .index("by_chatId", ["chatId"]),
+
+  memories: defineTable({
+    userId: v.id("users"),
+    resourceId: v.string(),
+    content: v.string(),
+    embedding: v.array(v.float64()),
+  })
+    .index("by_user", ["userId"])
+    .vectorIndex("by_embedding", {
+      vectorField: "embedding",
+      dimensions: 1536,
+      filterFields: ["userId"],
+    }),
 });

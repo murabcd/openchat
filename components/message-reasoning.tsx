@@ -34,15 +34,15 @@ export function MessageReasoning({ isLoading, reasoning }: MessageReasoningProps
   return (
     <div className="flex flex-col">
       {isLoading ? (
-        <div className="flex flex-row gap-2 items-center">
-          <div className="font-medium">Reasoning</div>
+        <div className="flex flex-row gap-2 items-center text-sm text-muted-foreground">
+          <div>Reasoning</div>
           <div className="animate-spin">
             <LoaderCircle className="w-4 h-4" />
           </div>
         </div>
       ) : (
-        <div className="flex flex-row gap-2 items-center">
-          <div className="font-medium">Reasoned for a few seconds</div>
+        <div className="flex flex-row gap-2 items-center text-sm text-muted-foreground">
+          <div>Reasoned for a few seconds</div>
           <div
             data-testid="message-reasoning-toggle"
             className="cursor-pointer"
