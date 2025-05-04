@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -24,6 +24,23 @@ const SettingsPersonalization = ({
   const user = useQuery(api.users.getUser);
   const updateMemoryPreference = useMutation(api.users.updateMemoryPreference);
 
+  // TODO: This is a workaround to avoid the switch from being disabled when the data is not loaded.
+  const [isEnabled, setIsEnabled] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const storedValue = localStorage.getItem("memoryEnabled");
+      return storedValue !== null ? storedValue === "true" : true;
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    if (user !== undefined) {
+      const authoritativeState = user?.isMemoryEnabled ?? true;
+      setIsEnabled(authoritativeState);
+      localStorage.setItem("memoryEnabled", String(authoritativeState));
+    }
+  }, [user]);
+
   const handleManageClick = () => {
     if (onManageMemoriesClick) {
       onManageMemoriesClick();
@@ -33,6 +50,9 @@ const SettingsPersonalization = ({
   };
 
   const handleMemoryToggle = (checked: boolean) => {
+    setIsEnabled(checked);
+    localStorage.setItem("memoryEnabled", String(checked));
+
     updateMemoryPreference({ enabled: checked })
       .then(() => {
         toast.success(checked ? "Memory enabled" : "Memory disabled");
@@ -43,8 +63,6 @@ const SettingsPersonalization = ({
       });
   };
 
-  const isMemoryCurrentlyEnabled = user?.isMemoryEnabled ?? true;
-
   return (
     <>
       <div className="flex flex-col gap-4 pt-4 px-3">
@@ -52,7 +70,7 @@ const SettingsPersonalization = ({
           <span className="text-sm">Memory</span>
           <Switch
             id="memory-switch"
-            checked={isMemoryCurrentlyEnabled}
+            checked={isEnabled}
             onCheckedChange={handleMemoryToggle}
             disabled={user === undefined}
           />
