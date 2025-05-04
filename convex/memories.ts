@@ -77,6 +77,11 @@ export const createResource = action({
     }
     const userId = user._id;
 
+    const memoryEnabled = user.isMemoryEnabled ?? true;
+    if (!memoryEnabled) {
+      return "Memory is disabled by user setting. Resource not saved.";
+    }
+
     const resourceId = crypto.randomUUID();
     let chunkEmbeddings;
     try {

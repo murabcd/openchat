@@ -9,6 +9,7 @@ export default defineSchema({
     email: v.string(),
     image: v.string(),
     emailVerificationTime: v.optional(v.number()),
+    isMemoryEnabled: v.optional(v.boolean()),
   }).index("email", ["email"]),
 
   chats: defineTable({

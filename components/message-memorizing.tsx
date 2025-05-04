@@ -51,6 +51,15 @@ export function MessageMemorizing({
       );
     }
 
+    // Handle skipped case based on result string
+    if (result?.startsWith("Memory is disabled")) {
+      return (
+        <div className="flex flex-row gap-2 items-center text-sm text-muted-foreground">
+          <div>Memory disabled</div>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-row gap-2 items-center text-sm text-muted-foreground">
         <div>Added to memory</div>
