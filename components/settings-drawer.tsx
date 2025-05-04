@@ -11,25 +11,31 @@ import {
   WandSparkles,
 } from "lucide-react";
 
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import AccountSettings from "@/components/settings-account";
+import AppearanceSettings from "@/components/settings-appearance";
+import DataControlsSettings from "@/components/settings-data-controls";
+import PersonalizationSettings from "@/components/settings-personalization";
+import { SettingsMemoriesView } from "@/components/settings-memories-view";
 
 import type { Doc } from "@/convex/_generated/dataModel";
 
-import AccountSettings from "./settings-account";
-import AppearanceSettings from "./settings-appearance";
-import DataControlsSettings from "./settings-data-controls";
-import PersonalizationSettings from "./settings-personalization";
-
-interface SettingsSheetProps {
+interface SettingsDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user: Doc<"users">;
 }
 
-type SettingsView = "main" | "account" | "appearance" | "data" | "personalization";
+type SettingsView =
+  | "main"
+  | "account"
+  | "appearance"
+  | "data"
+  | "personalization"
+  | "manageMemories";
 
-const SettingsDrawer = ({ open, onOpenChange, user }: SettingsSheetProps) => {
+const SettingsDrawer = ({ open, onOpenChange, user }: SettingsDrawerProps) => {
   const [currentView, setCurrentView] = useState<SettingsView>("main");
 
   const settingsItems = [
@@ -94,7 +100,16 @@ const SettingsDrawer = ({ open, onOpenChange, user }: SettingsSheetProps) => {
       case "personalization":
         return (
           <div className="p-4">
-            <PersonalizationSettings />
+            <PersonalizationSettings
+              onManageMemoriesClick={() => setCurrentView("manageMemories")}
+            />
+          </div>
+        );
+
+      case "manageMemories":
+        return (
+          <div className="p-4">
+            <SettingsMemoriesView />
           </div>
         );
 
@@ -104,11 +119,16 @@ const SettingsDrawer = ({ open, onOpenChange, user }: SettingsSheetProps) => {
   };
 
   const handleBack = () => {
-    setCurrentView("main");
+    if (currentView === "manageMemories") {
+      setCurrentView("personalization");
+    } else {
+      setCurrentView("main");
+    }
   };
 
   const getTitle = () => {
     if (currentView === "main") return "Settings";
+    if (currentView === "manageMemories") return "Saved memories";
     const item = settingsItems.find((i) => i.view === currentView);
     return item?.label ?? "Settings";
   };

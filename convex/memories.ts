@@ -3,10 +3,17 @@ import { embed, embedMany } from "ai";
 import { myProvider } from "@/lib/ai/models";
 
 import { v } from "convex/values";
-import { action, internalMutation, internalQuery } from "./_generated/server";
+import {
+  action,
+  internalMutation,
+  internalQuery,
+  query,
+  mutation,
+} from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
 import { api } from "./_generated/api";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 function generateChunks(input: string): string[] {
   return input
@@ -66,7 +73,7 @@ export const createResource = action({
   handler: async (ctx, args) => {
     const user = await ctx.runQuery(api.users.getUser);
     if (!user) {
-      throw new Error("Authenticated user not found in database.");
+      throw new Error("Authenticated user not found in database");
     }
     const userId = user._id;
 
@@ -87,14 +94,14 @@ export const createResource = action({
           resourceId: resourceId,
           chunks: chunkEmbeddings,
         });
-        return `Resource ${resourceId} created and embedded in Convex.`;
+        return `Resource ${resourceId} created and embedded in Convex`;
       } catch (error: any) {
         throw new Error(
           `Failed to save embeddings to database: ${error.message || "Unknown error"}`
         );
       }
     } else {
-      return `Resource ${resourceId} created, but no content suitable for embedding was found.`;
+      return `Resource ${resourceId} created, but no content suitable for embedding was found`;
     }
   },
 });
@@ -138,5 +145,58 @@ export const fetchResultContent = internalQuery({
   handler: async (ctx, args) => {
     const doc = (await ctx.db.get(args.id)) as Doc<"memories"> | null;
     return doc?.content ?? null;
+  },
+});
+
+export const listMemories = query({
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("User not authenticated");
+    }
+
+    return await ctx.db
+      .query("memories")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+  },
+});
+
+export const deleteMemory = mutation({
+  args: { id: v.id("memories") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("User not authenticated");
+    }
+
+    const memory = await ctx.db.get(args.id);
+    if (!memory) {
+      throw new Error("Memory not found");
+    }
+
+    if (memory.userId !== userId) {
+      throw new Error("User not authenticated");
+    }
+
+    await ctx.db.delete(args.id);
+  },
+});
+
+export const deleteAllMemories = mutation({
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("User not authenticated");
+    }
+
+    const memoriesToDelete = await ctx.db
+      .query("memories")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    for (const memory of memoriesToDelete) {
+      await ctx.db.delete(memory._id);
+    }
   },
 });

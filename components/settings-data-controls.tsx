@@ -80,8 +80,8 @@ const SettingsDataControls = () => {
             <AlertDialogHeader>
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete all your
-                conversations and associated data.
+                This action cannot be undone. This will permanently delete all your chats
+                and associated data.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
