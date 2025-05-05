@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useLocalStorage } from "usehooks-ts";
 
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -24,22 +25,19 @@ const SettingsPersonalization = ({
   const user = useQuery(api.users.getUser);
   const updateMemoryPreference = useMutation(api.users.updateMemoryPreference);
 
-  // TODO: This is a workaround to avoid the switch from being disabled when the data is not loaded.
-  const [isEnabled, setIsEnabled] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      const storedValue = localStorage.getItem("memoryEnabled");
-      return storedValue !== null ? storedValue === "true" : true;
-    }
-    return true;
-  });
+  // Use the hook, default to true, initialize immediately on client
+  const [isEnabled, setIsEnabledLocally] = useLocalStorage<boolean>(
+    "memoryEnabled",
+    true
+  );
 
   useEffect(() => {
     if (user !== undefined) {
       const authoritativeState = user?.isMemoryEnabled ?? true;
-      setIsEnabled(authoritativeState);
-      localStorage.setItem("memoryEnabled", String(authoritativeState));
+
+      setIsEnabledLocally(authoritativeState);
     }
-  }, [user]);
+  }, [user, setIsEnabledLocally]);
 
   const handleManageClick = () => {
     if (onManageMemoriesClick) {
@@ -50,9 +48,10 @@ const SettingsPersonalization = ({
   };
 
   const handleMemoryToggle = (checked: boolean) => {
-    setIsEnabled(checked);
-    localStorage.setItem("memoryEnabled", String(checked));
+    // Update local state (and localStorage via the hook)
+    setIsEnabledLocally(checked);
 
+    // Update backend (optimistic update handled by hook)
     updateMemoryPreference({ enabled: checked })
       .then(() => {
         toast.success(checked ? "Memory enabled" : "Memory disabled");
