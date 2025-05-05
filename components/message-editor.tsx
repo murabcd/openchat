@@ -25,9 +25,8 @@ export function MessageEditor({
   reload,
 }: MessageEditorProps) {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const initialContent =
-    message.parts.find((part) => part.type === "text")?.text ?? message.content ?? "";
-  const [draftContent, setDraftContent] = useState<string>(initialContent);
+
+  const [draftContent, setDraftContent] = useState<string>(message.content);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const deleteTrailingMessages = useMutation(api.messages.deleteTrailingMessages);
 

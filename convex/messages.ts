@@ -84,8 +84,7 @@ export const getMessagesByChatId = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("messages")
-      .withIndex("by_chatId")
-      .filter((q) => q.eq(q.field("chatId"), args.chatId))
+      .withIndex("by_chatId", (q) => q.eq("chatId", args.chatId))
       .order("asc")
       .collect();
   },
