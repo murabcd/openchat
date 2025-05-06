@@ -33,6 +33,27 @@ export const metadata: Metadata = {
       },
     ],
   },
+  openGraph: {
+    title: "OpenChat",
+    description: "Bring your ideas to life.",
+    url: "/",
+    siteName: "OpenChat",
+    images: [
+      {
+        url: "/api/og",
+        width: 1200,
+        height: 630,
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "OpenChat",
+    description: "Bring your ideas to life.",
+    images: ["/api/og"],
+  },
 };
 
 export default function RootLayout({
