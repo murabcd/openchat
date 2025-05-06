@@ -63,6 +63,10 @@ export const Chat = ({
     generateId: generateUUID,
     experimental_prepareRequestBody: (body) => {
       console.log(
+        "[Chat.tsx] experimental_prepareRequestBody - input body:",
+        JSON.stringify(body)
+      );
+      console.log(
         "[Chat.tsx] experimental_prepareRequestBody - last message in body:",
         JSON.stringify(body.messages.at(-1))
       );
@@ -71,6 +75,7 @@ export const Chat = ({
         message: body.messages.at(-1),
         selectedChatModel: selectedChatModel,
         selectedVisibilityType: selectedVisibilityType,
+        data: body.requestData,
       };
     },
     onFinish: (data) => {

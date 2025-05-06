@@ -11,6 +11,7 @@ export const env = createEnv({
     OPENAI_API_KEY: z.string().min(1),
     AUTH_GOOGLE_ID: z.string().min(1),
     AUTH_GOOGLE_SECRET: z.string().min(1),
+    REDIS_URL: z.string().min(1),
   },
 
   /**
@@ -30,5 +31,6 @@ export const env = createEnv({
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID,
     AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
+    REDIS_URL: process.env.REDIS_URL,
   },
 });

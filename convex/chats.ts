@@ -65,10 +65,16 @@ export const deleteChatById = mutation({
       .withIndex("by_chatId", (q) => q.eq("chatId", args.id))
       .collect();
 
+    const streams = await ctx.db
+      .query("streams")
+      .withIndex("by_chatId", (q) => q.eq("chatId", args.id))
+      .collect();
+
     await Promise.all([
       ...votes.map((vote) => ctx.db.delete(vote._id)),
       ...messages.map((message) => ctx.db.delete(message._id)),
       ...documents.map((document) => ctx.db.delete(document._id)),
+      ...streams.map((stream) => ctx.db.delete(stream._id)),
       ctx.db.delete(chat._id),
     ]);
   },
@@ -197,10 +203,15 @@ export const deleteAllUserChats = mutation({
         .query("documents")
         .withIndex("by_chatId", (q) => q.eq("chatId", chat.chatId))
         .collect();
+      const streams = await ctx.db
+        .query("streams")
+        .withIndex("by_chatId", (q) => q.eq("chatId", chat.chatId))
+        .collect();
 
       messages.forEach((msg) => deletePromises.push(ctx.db.delete(msg._id)));
       votes.forEach((vote) => deletePromises.push(ctx.db.delete(vote._id)));
       documents.forEach((doc) => deletePromises.push(ctx.db.delete(doc._id)));
+      streams.forEach((stream) => deletePromises.push(ctx.db.delete(stream._id)));
 
       deletePromises.push(ctx.db.delete(chat._id));
     }

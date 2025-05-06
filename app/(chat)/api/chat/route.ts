@@ -66,10 +66,17 @@ export async function POST(request: Request) {
     data?: { useWebSearch?: boolean };
   } = await request.json();
   console.log(
-    "[api/chat POST] Request body parsed. UserMessage:",
-    JSON.stringify(userMessage),
+    "[api/chat POST] Request body parsed.",
     "ChatId:",
-    id
+    id,
+    "UserMessage:",
+    JSON.stringify(userMessage),
+    "SelectedChatModel:",
+    selectedChatModel,
+    "Data object:",
+    data,
+    "useWebSearch value:",
+    data?.useWebSearch
   );
 
   const token = await convexAuthNextjsToken().catch(() => null);
