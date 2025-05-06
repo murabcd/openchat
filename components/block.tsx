@@ -61,7 +61,7 @@ function PureBlock({
   input,
   setInput,
   handleSubmit,
-  isLoading,
+  status,
   stop,
   attachments,
   setAttachments,
@@ -75,7 +75,7 @@ function PureBlock({
   chatId: string;
   input: string;
   setInput: UseChatHelpers["setInput"];
-  isLoading: boolean;
+  status: UseChatHelpers["status"];
   stop: UseChatHelpers["stop"];
   attachments: Array<Attachment>;
   setAttachments: Dispatch<SetStateAction<Array<Attachment>>>;
@@ -331,7 +331,7 @@ function PureBlock({
               <div className="flex flex-col h-full justify-between items-center gap-4">
                 <BlockMessages
                   chatId={chatId}
-                  isLoading={isLoading}
+                  status={status}
                   votes={votes}
                   messages={messages}
                   setMessages={setMessages}
@@ -346,7 +346,7 @@ function PureBlock({
                     input={input}
                     setInput={setInput}
                     handleSubmit={handleSubmit}
-                    isLoading={isLoading}
+                    status={status}
                     stop={stop}
                     attachments={attachments}
                     setAttachments={setAttachments}
@@ -488,7 +488,7 @@ function PureBlock({
                     isToolbarVisible={isToolbarVisible}
                     setIsToolbarVisible={setIsToolbarVisible}
                     append={append}
-                    isLoading={isLoading}
+                    status={status}
                     stop={stop}
                     setMessages={setMessages}
                     blockKind={block.kind}
@@ -514,7 +514,7 @@ function PureBlock({
 }
 
 export const Block = memo(PureBlock, (prevProps, nextProps) => {
-  if (prevProps.isLoading !== nextProps.isLoading) return false;
+  if (prevProps.status !== nextProps.status) return false;
   if (!equal(prevProps.votes, nextProps.votes)) return false;
   if (prevProps.input !== nextProps.input) return false;
   if (prevProps.messages.length !== nextProps.messages.length) return false;

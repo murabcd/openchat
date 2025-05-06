@@ -51,6 +51,7 @@ export default async function ChatPage(props: { params: Promise<{ id: string }> 
           isReadonly={user?._id !== chat.userId}
           isChatSelected={true}
           user={user}
+          autoResume={true}
         />
         <DataStreamHandler id={chat.chatId} />
       </>
@@ -67,6 +68,7 @@ export default async function ChatPage(props: { params: Promise<{ id: string }> 
         isReadonly={user?._id !== chat.userId}
         isChatSelected={true}
         user={user}
+        autoResume={true}
       />
       <DataStreamHandler id={chat.chatId} />
     </>

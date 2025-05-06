@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Block } from "@/components/create-block";
 import { DiffView } from "@/components/diffview";
 import { DocumentSkeleton } from "@/components/document-skeleton";
-import { Editor } from "@/components/editor";
+import { Editor } from "@/components/text-editor";
 
 import { Doc } from "@/convex/_generated/dataModel";
 

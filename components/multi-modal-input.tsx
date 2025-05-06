@@ -44,7 +44,7 @@ function PureMultiModalInput({
   chatId,
   input,
   setInput,
-  isLoading,
+  status,
   stop,
   attachments,
   setAttachments,
@@ -57,8 +57,8 @@ function PureMultiModalInput({
   chatId: string;
   input: UseChatHelpers["input"];
   setInput: UseChatHelpers["setInput"];
-  isLoading: boolean;
-  stop: UseChatHelpers["stop"];
+  status: UseChatHelpers["status"];
+  stop: () => void;
   attachments: Array<Attachment>;
   setAttachments: Dispatch<SetStateAction<Array<Attachment>>>;
   messages: Array<UIMessage>;
@@ -75,7 +75,7 @@ function PureMultiModalInput({
     if (textareaRef.current) {
       adjustHeight();
     }
-  }, [input, isLoading]);
+  }, [input, status]);
 
   const adjustHeight = () => {
     if (textareaRef.current) {
@@ -260,7 +260,7 @@ function PureMultiModalInput({
           ) {
             event.preventDefault();
 
-            if (isLoading) {
+            if (status !== "ready") {
               toast.error("Please wait for the model to finish its response");
             } else {
               submitForm();
@@ -274,7 +274,7 @@ function PureMultiModalInput({
           <Tooltip>
             <TooltipTrigger asChild>
               <span>
-                <AttachmentsButton fileInputRef={fileInputRef} isLoading={isLoading} />
+                <AttachmentsButton fileInputRef={fileInputRef} status={status} />
               </span>
             </TooltipTrigger>
             <TooltipContent>
@@ -289,7 +289,7 @@ function PureMultiModalInput({
                   pressed={isWebSearchEnabled}
                   onPressedChange={setIsWebSearchEnabled}
                   aria-label="Toggle web search"
-                  disabled={isLoading}
+                  disabled={status !== "ready"}
                   className="p-[7px] h-fit dark:border-zinc-700 text-zinc-900 dark:text-zinc-50 hover:bg-zinc-200 hover:text-zinc-900 dark:hover:bg-zinc-900 dark:hover:text-zinc-50 data-[state=on]:bg-zinc-200 data-[state=on]:text-zinc-900 data-[state=on]:dark:bg-zinc-900 data-[state=on]:dark:text-zinc-200"
                 >
                   <Globe className="w-4 h-4" />
@@ -304,28 +304,10 @@ function PureMultiModalInput({
       </TooltipProvider>
 
       <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
-        {isLoading ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <StopButton stop={stop} setMessages={setMessages} />
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Stop generating</p>
-            </TooltipContent>
-          </Tooltip>
+        {status === "submitted" ? (
+          <StopButton stop={stop} setMessages={setMessages} />
         ) : (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <SendButton
-                input={input}
-                submitForm={submitForm}
-                uploadQueue={uploadQueue}
-              />
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Send message</p>
-            </TooltipContent>
-          </Tooltip>
+          <SendButton input={input} submitForm={submitForm} uploadQueue={uploadQueue} />
         )}
       </div>
     </div>
@@ -334,7 +316,7 @@ function PureMultiModalInput({
 
 export const MultiModalInput = memo(PureMultiModalInput, (prevProps, nextProps) => {
   if (prevProps.input !== nextProps.input) return false;
-  if (prevProps.isLoading !== nextProps.isLoading) return false;
+  if (prevProps.status !== nextProps.status) return false;
   if (!equal(prevProps.attachments, nextProps.attachments)) return false;
 
   return true;
@@ -342,10 +324,10 @@ export const MultiModalInput = memo(PureMultiModalInput, (prevProps, nextProps) 
 
 function PureAttachmentsButton({
   fileInputRef,
-  isLoading,
+  status,
 }: {
   fileInputRef: React.RefObject<HTMLInputElement | null>;
-  isLoading: boolean;
+  status: UseChatHelpers["status"];
 }) {
   return (
     <Button
@@ -355,7 +337,7 @@ function PureAttachmentsButton({
         event.preventDefault();
         fileInputRef.current?.click();
       }}
-      disabled={isLoading}
+      disabled={status !== "ready"}
       variant="ghost"
     >
       <Paperclip className="w-4 h-4" />

@@ -297,14 +297,14 @@ const PureToolbar = ({
   isToolbarVisible,
   setIsToolbarVisible,
   append,
-  isLoading,
+  status,
   stop,
   setMessages,
   blockKind,
 }: {
   isToolbarVisible: boolean;
   setIsToolbarVisible: Dispatch<SetStateAction<boolean>>;
-  isLoading: boolean;
+  status: UseChatHelpers["status"];
   append: UseChatHelpers["append"];
   stop: UseChatHelpers["stop"];
   setMessages: UseChatHelpers["setMessages"];
@@ -347,10 +347,10 @@ const PureToolbar = ({
   }, []);
 
   useEffect(() => {
-    if (isLoading) {
+    if (status === "streaming") {
       setIsToolbarVisible(false);
     }
-  }, [isLoading, setIsToolbarVisible]);
+  }, [setIsToolbarVisible, status]);
 
   const blockDefinition = blockDefinitions.find(
     (definition) => definition.kind === blockKind
@@ -393,13 +393,13 @@ const PureToolbar = ({
         exit={{ opacity: 0, y: -20, transition: { duration: 0.1 } }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
         onHoverStart={() => {
-          if (isLoading) return;
+          if (status === "streaming") return;
 
           cancelCloseTimer();
           setIsToolbarVisible(true);
         }}
         onHoverEnd={() => {
-          if (isLoading) return;
+          if (status === "streaming") return;
 
           startCloseTimer();
         }}
@@ -411,7 +411,7 @@ const PureToolbar = ({
         }}
         ref={toolbarRef}
       >
-        {isLoading ? (
+        {status === "streaming" ? (
           <motion.div
             key="stop-icon"
             initial={{ scale: 1 }}
@@ -450,7 +450,7 @@ const PureToolbar = ({
 };
 
 export const Toolbar = memo(PureToolbar, (prevProps, nextProps) => {
-  if (prevProps.isLoading !== nextProps.isLoading) return false;
+  if (prevProps.status !== nextProps.status) return false;
   if (prevProps.isToolbarVisible !== nextProps.isToolbarVisible) return false;
   if (prevProps.blockKind !== nextProps.blockKind) return false;
 

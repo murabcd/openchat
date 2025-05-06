@@ -11,7 +11,7 @@ import { api } from "@/convex/_generated/api";
 
 import { useBlock } from "@/hooks/use-block";
 
-import { Editor } from "@/components/editor";
+import { Editor } from "@/components/text-editor";
 import { BlockKind, UIBlock } from "@/components/block";
 import { DocumentToolCall, DocumentToolResult } from "@/components/document";
 import { CodeEditor } from "@/components/code-editor";

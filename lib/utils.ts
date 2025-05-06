@@ -1,10 +1,4 @@
-import type {
-  Attachment,
-  CoreAssistantMessage,
-  CoreToolMessage,
-  Message,
-  UIMessage,
-} from "ai";
+import type { Attachment, CoreAssistantMessage, CoreToolMessage, UIMessage } from "ai";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -39,7 +33,7 @@ export function convertToUIMessages(messages: Array<DBMessage>): Array<UIMessage
 type ResponseMessageWithoutId = CoreToolMessage | CoreAssistantMessage;
 type ResponseMessage = ResponseMessageWithoutId & { id: string };
 
-export function getMostRecentUserMessage(messages: Array<Message>) {
+export function getMostRecentUserMessage(messages: Array<UIMessage>) {
   const userMessages = messages.filter((message) => message.role === "user");
   return userMessages.at(-1);
 }

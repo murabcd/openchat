@@ -12,7 +12,7 @@ import equal from "fast-deep-equal";
 
 interface MessagesProps {
   chatId: string;
-  isLoading: boolean;
+  status: UseChatHelpers["status"];
   votes: Array<Doc<"votes">> | undefined;
   messages: Array<UIMessage>;
   setMessages: UseChatHelpers["setMessages"];
@@ -24,7 +24,7 @@ interface MessagesProps {
 
 function PureMessages({
   chatId,
-  isLoading,
+  status,
   votes,
   messages,
   setMessages,
@@ -46,7 +46,7 @@ function PureMessages({
           key={message.id}
           chatId={chatId}
           message={message}
-          isLoading={isLoading && messages.length - 1 === index}
+          isLoading={status === "streaming" && messages.length - 1 === index}
           vote={votes ? votes.find((vote) => vote.messageId === message.id) : undefined}
           setMessages={setMessages}
           reload={reload}
@@ -54,7 +54,7 @@ function PureMessages({
         />
       ))}
 
-      {isLoading &&
+      {status === "submitted" &&
         messages.length > 0 &&
         messages[messages.length - 1].role === "user" && <ThinkingMessage />}
 
@@ -66,8 +66,8 @@ function PureMessages({
 export const Messages = memo(PureMessages, (prevProps, nextProps) => {
   if (prevProps.isBlockVisible && nextProps.isBlockVisible) return true;
 
-  if (prevProps.isLoading !== nextProps.isLoading) return false;
-  if (prevProps.isLoading && nextProps.isLoading) return false;
+  if (prevProps.status !== nextProps.status) return false;
+  if (prevProps.status && nextProps.status) return false;
   if (prevProps.messages.length !== nextProps.messages.length) return false;
   if (!equal(prevProps.messages, nextProps.messages)) return false;
   if (!equal(prevProps.votes, nextProps.votes)) return false;

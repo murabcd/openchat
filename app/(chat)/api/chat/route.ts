@@ -1,7 +1,8 @@
 import {
   UIMessage,
   appendResponseMessages,
-  createDataStreamResponse,
+  appendClientMessage,
+  createDataStream,
   smoothStream,
   streamText,
 } from "ai";
@@ -11,11 +12,7 @@ import { generateTitleFromUserMessage } from "@/lib/ai/utils";
 import { systemPrompt } from "@/lib/ai/prompts";
 import { openai } from "@ai-sdk/openai";
 
-import {
-  generateUUID,
-  getMostRecentUserMessage,
-  getTrailingMessageId,
-} from "@/lib/utils";
+import { generateUUID, getTrailingMessageId, convertToUIMessages } from "@/lib/utils";
 
 import { createDocument } from "@/lib/ai/tools/create-document";
 import { updateDocument } from "@/lib/ai/tools/update-document";
@@ -27,20 +24,53 @@ import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 
+import {
+  createResumableStreamContext,
+  type ResumableStreamContext,
+} from "resumable-stream";
+import { after } from "next/server";
+
 export const maxDuration = 60;
 
+let globalStreamContext: ResumableStreamContext | null = null;
+
+function getStreamContext() {
+  if (!globalStreamContext) {
+    try {
+      globalStreamContext = createResumableStreamContext({
+        waitUntil: after,
+      });
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message.includes("REDIS_URL")) {
+        console.log(" > Resumable streams are disabled due to missing REDIS_URL");
+      } else {
+        console.error(error);
+      }
+    }
+  }
+
+  return globalStreamContext;
+}
+
 export async function POST(request: Request) {
+  console.log("[api/chat POST] Received request");
   const {
     id,
-    messages,
+    message: userMessage,
     selectedChatModel,
     data,
   }: {
     id: string;
-    messages: Array<UIMessage>;
+    message: UIMessage;
     selectedChatModel: string;
     data?: { useWebSearch?: boolean };
   } = await request.json();
+  console.log(
+    "[api/chat POST] Request body parsed. UserMessage:",
+    JSON.stringify(userMessage),
+    "ChatId:",
+    id
+  );
 
   const token = await convexAuthNextjsToken().catch(() => null);
   const user = token
@@ -48,45 +78,82 @@ export async function POST(request: Request) {
     : null;
 
   if (!user) {
+    console.error("[api/chat POST] Unauthorized: No user found for token.");
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const userMessage = getMostRecentUserMessage(messages);
-  if (!userMessage) {
-    return new Response("No user message found", { status: 400 });
+  console.log("[api/chat POST] User authenticated:", user._id);
+
+  if (!userMessage || !userMessage.content) {
+    console.error("[api/chat POST] Bad Request: User message or content missing.");
+    return new Response("User message or message content is missing", { status: 400 });
   }
 
   const chat = await fetchQuery(api.chats.getChatById, { chatId: id });
   if (!chat) {
+    console.log(
+      "[api/chat POST] No existing chat found. Generating title and saving new chat."
+    );
     const title = await generateTitleFromUserMessage({ message: userMessage });
+    console.log("[api/chat POST] Title generated:", title);
     await fetchMutation(api.chats.saveChat, {
       title,
       chatId: id,
       userId: user._id,
       visibility: "private",
     });
+    console.log("[api/chat POST] New chat saved.");
+  } else {
+    console.log("[api/chat POST] Existing chat found.");
   }
 
+  console.log("[api/chat POST] Saving user message to DB...");
   await fetchMutation(api.messages.saveMessages, {
     messages: [
       {
         messageId: userMessage.id,
         chatId: id,
-        role: userMessage.role as "user" | "assistant",
-        parts: [{ type: "text", text: userMessage.content }],
+        role: "user",
+        parts: userMessage.parts,
         attachments: userMessage.experimental_attachments
           ?.filter((att) => att.name !== undefined && att.contentType !== undefined)
           .map((att) => ({ ...att, name: att.name!, contentType: att.contentType! })),
       },
     ],
   });
+  console.log("[api/chat POST] User message saved. Fetching previous messages...");
 
-  return createDataStreamResponse({
+  const dbMessages = await fetchQuery(
+    api.messages.getMessagesByChatId,
+    { chatId: id },
+    { token: token ?? undefined }
+  );
+  const previousMessages = convertToUIMessages(dbMessages);
+  console.log(
+    "[api/chat POST] Previous messages fetched. Count:",
+    previousMessages.length
+  );
+
+  const allMessages = appendClientMessage({
+    messages: previousMessages.filter((m) => m.id !== userMessage.id),
+    message: userMessage,
+  });
+  console.log(
+    "[api/chat POST] All messages for AI (excluding potential duplicate of current user message):",
+    JSON.stringify(allMessages)
+  );
+
+  const streamId = generateUUID();
+  await fetchMutation(api.streams.createStreamId, { streamId, chatId: id });
+  console.log("[api/chat POST] Stream ID created and saved:", streamId);
+
+  const stream = createDataStream({
     execute: (dataStream) => {
+      console.log("[api/chat POST execute] Stream execution started.");
       const result = streamText({
         model: myProvider.languageModel(selectedChatModel),
         system: systemPrompt({ selectedChatModel }),
-        messages,
+        messages: allMessages,
         maxSteps: 5,
         experimental_activeTools:
           selectedChatModel === "chat-model-reasoning"
@@ -113,6 +180,11 @@ export async function POST(request: Request) {
           ...(data?.useWebSearch ? { webSearch: openai.tools.webSearchPreview() } : {}),
         },
         onFinish: async ({ response }) => {
+          console.log(
+            "[api/chat POST onFinish] Stream finished. Response:",
+            JSON.stringify(response)
+          );
+
           if (user) {
             try {
               const assistantId = getTrailingMessageId({
@@ -122,6 +194,9 @@ export async function POST(request: Request) {
               });
 
               if (!assistantId) {
+                console.error(
+                  "[api/chat POST onFinish] No assistant message found in response!"
+                );
                 throw new Error("No assistant message found!");
               }
 
@@ -129,7 +204,10 @@ export async function POST(request: Request) {
                 messages: [userMessage],
                 responseMessages: response.messages,
               });
-
+              console.log(
+                "[api/chat POST onFinish] Saving assistant message to DB:",
+                JSON.stringify(assistantMessage)
+              );
               await fetchMutation(api.messages.saveMessages, {
                 messages: [
                   {
@@ -149,22 +227,112 @@ export async function POST(request: Request) {
                   },
                 ],
               });
-            } catch (error) {
-              console.error("[api/chat] Error saving assistant message:", error);
+              console.log("[api/chat POST onFinish] Assistant message saved.");
+            } catch (dbError) {
+              console.error(
+                "[api/chat POST onFinish] Error saving assistant message:",
+                dbError
+              );
             }
           }
         },
       });
-
+      console.log(
+        "[api/chat POST execute] streamText configured. Consuming and merging stream..."
+      );
       result.consumeStream();
-
       result.mergeIntoDataStream(dataStream, { sendReasoning: true });
+      console.log(
+        "[api/chat POST execute] Stream processing started via mergeIntoDataStream."
+      );
     },
     onError: (error: unknown) => {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      console.error(
+        "[api/chat POST createDataStream onError] Error occurred:",
+        errorMessage,
+        error
+      );
       return `Oops, an error occurred during streaming: ${errorMessage}`;
     },
   });
+
+  const streamContext = getStreamContext();
+
+  if (streamContext) {
+    console.log("[api/chat POST] Returning resumable stream response.");
+    return new Response(await streamContext.resumableStream(streamId, () => stream));
+  } else {
+    console.log(
+      "[api/chat POST] Returning direct stream response (resumable context not available)."
+    );
+    return new Response(stream);
+  }
+}
+
+export async function GET(request: Request) {
+  const streamContext = getStreamContext();
+
+  if (!streamContext) {
+    return new Response(null, { status: 204 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const chatId = searchParams.get("chatId");
+
+  if (!chatId) {
+    return new Response("id is required", { status: 400 });
+  }
+
+  const token = await convexAuthNextjsToken().catch(() => null);
+  const user = token
+    ? await fetchQuery(api.users.getUser, {}, { token }).catch(() => null)
+    : null;
+
+  if (!user) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  try {
+    const chat = await fetchQuery(api.chats.getChatById, { chatId });
+    if (!chat) {
+      return new Response("Not found", { status: 404 });
+    }
+
+    if (chat.visibility === "private" && chat.userId !== user._id) {
+      return new Response("Forbidden", { status: 403 });
+    }
+
+    const streamIds = await fetchQuery(api.streams.getStreamIdsByChatId, {
+      chatId,
+    });
+
+    if (!streamIds.length) {
+      return new Response("No streams found", { status: 404 });
+    }
+
+    const recentStreamId = streamIds.at(-1);
+
+    if (!recentStreamId) {
+      return new Response("No recent stream found", { status: 404 });
+    }
+
+    const emptyDataStream = createDataStream({
+      execute: () => {},
+    });
+
+    return new Response(
+      await streamContext.resumableStream(recentStreamId, () => emptyDataStream),
+      {
+        status: 200,
+      }
+    );
+  } catch (error) {
+    console.error("[api/chat GET] Error:", error);
+    return new Response("An error occurred while processing your request", {
+      status: 500,
+    });
+  }
 }
 
 export async function DELETE(request: Request) {

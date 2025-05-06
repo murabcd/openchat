@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { Attachment, UIMessage } from "ai";
 import { useChat } from "@ai-sdk/react";
@@ -29,6 +29,7 @@ interface ChatProps {
   isReadonly: boolean;
   isChatSelected: boolean;
   user: Doc<"users"> | null;
+  autoResume: boolean;
 }
 
 export const Chat = ({
@@ -39,6 +40,7 @@ export const Chat = ({
   isReadonly,
   isChatSelected,
   user,
+  autoResume,
 }: ChatProps) => {
   const votes = useQuery(api.chats.getVotesByChatId, { chatId: id }) || [];
 
@@ -52,20 +54,48 @@ export const Chat = ({
     stop,
     append,
     reload,
+    experimental_resume,
   } = useChat({
     id,
-    body: { id, selectedChatModel: selectedChatModel },
     initialMessages,
     experimental_throttle: 100,
     sendExtraMessageFields: true,
     generateId: generateUUID,
-    onFinish: () => {
+    experimental_prepareRequestBody: (body) => {
+      console.log(
+        "[Chat.tsx] experimental_prepareRequestBody - last message in body:",
+        JSON.stringify(body.messages.at(-1))
+      );
+      return {
+        id,
+        message: body.messages.at(-1),
+        selectedChatModel: selectedChatModel,
+        selectedVisibilityType: selectedVisibilityType,
+      };
+    },
+    onFinish: (data) => {
       // Could add Convex mutation here if needed
+      console.log("[Chat.tsx] onFinish - data:", JSON.stringify(data));
     },
     onError: () => {
       toast.error("An error occured, please try again");
     },
   });
+
+  useEffect(() => {
+    console.log(
+      "[Chat.tsx] Messages or Status updated:",
+      JSON.stringify(messages),
+      "Status:",
+      status
+    );
+    if (autoResume) {
+      experimental_resume();
+    }
+
+    // note: this hook has no dependencies since it only needs to run once
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
   const isBlockVisible = useBlockSelector((state) => state.isVisible);
@@ -83,7 +113,7 @@ export const Chat = ({
 
         <Messages
           chatId={id}
-          isLoading={status === "submitted"}
+          status={status}
           votes={votes}
           messages={messages}
           setMessages={setMessages}
@@ -100,7 +130,7 @@ export const Chat = ({
               input={input}
               setInput={setInput}
               handleSubmit={handleSubmit}
-              isLoading={status === "submitted"}
+              status={status}
               stop={stop}
               attachments={attachments}
               setAttachments={setAttachments}
@@ -117,7 +147,7 @@ export const Chat = ({
         input={input}
         setInput={setInput}
         handleSubmit={handleSubmit}
-        isLoading={status !== "streaming"}
+        status={status}
         stop={stop}
         attachments={attachments}
         setAttachments={setAttachments}

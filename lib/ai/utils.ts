@@ -1,8 +1,8 @@
 "use server";
 
-import { openai } from "@ai-sdk/openai";
+import { myProvider } from "@/lib/ai/models";
 import { generateText } from "ai";
-import type { Message } from "ai";
+import type { UIMessage } from "ai";
 
 import { cookies } from "next/headers";
 
@@ -21,9 +21,9 @@ export async function getSuggestions({ documentId }: { documentId: string }) {
   return suggestions ?? [];
 }
 
-export async function generateTitleFromUserMessage({ message }: { message: Message }) {
+export async function generateTitleFromUserMessage({ message }: { message: UIMessage }) {
   const { text: title } = await generateText({
-    model: openai("gpt-4o-mini"),
+    model: myProvider.languageModel("title-model"),
     system: `\n
     - You will generate a short title based on the first message a user begins a conversation with
     - Ensure it is not more than 80 characters long

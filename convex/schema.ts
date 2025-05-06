@@ -89,4 +89,9 @@ export default defineSchema({
       dimensions: 1536,
       filterFields: ["userId"],
     }),
+
+  streams: defineTable({
+    streamId: v.string(),
+    chatId: v.string(),
+  }).index("by_chatId", ["chatId"]),
 });

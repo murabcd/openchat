@@ -28,6 +28,7 @@ export default async function Page() {
           isReadonly={false}
           isChatSelected={false}
           user={user}
+          autoResume={false}
         />
         <DataStreamHandler id={id} />
       </>
@@ -45,6 +46,7 @@ export default async function Page() {
         isReadonly={false}
         isChatSelected={false}
         user={user}
+        autoResume={false}
       />
       <DataStreamHandler id={id} />
     </>
