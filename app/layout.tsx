@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "OpenChat",
     description: "Bring your ideas to life.",
-    url: "/",
+    url: "https://openchat-beta.vercel.app",
     siteName: "OpenChat",
     images: [
       {
