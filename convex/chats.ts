@@ -116,7 +116,7 @@ export const getVotesByChatId = query({
   },
 });
 
-export const updateChatVisiblityById = mutation({
+export const updateChatVisibilityById = mutation({
   args: {
     chatId: v.string(),
     visibility: v.union(v.literal("private"), v.literal("public")),
