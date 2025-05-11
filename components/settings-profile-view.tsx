@@ -166,7 +166,7 @@ export const SettingsProfileView = ({
           </div>
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="name">Name</Label>
+          <Label htmlFor="name">Full name</Label>
           <Input
             id="name"
             value={name}

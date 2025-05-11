@@ -39,10 +39,13 @@ export const Chat = ({
   selectedVisibilityType,
   isReadonly,
   isChatSelected,
-  user,
+  user: initialUser,
   autoResume,
 }: ChatProps) => {
   const votes = useQuery(api.chats.getVotesByChatId, { chatId: id }) || [];
+  const queriedUser = useQuery(api.users.getUser, {});
+
+  const displayUser = queriedUser ?? initialUser;
 
   const {
     messages,
@@ -125,7 +128,7 @@ export const Chat = ({
           reload={reload}
           isReadonly={isReadonly}
           isBlockVisible={isBlockVisible}
-          user={user}
+          user={displayUser}
         />
 
         <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
