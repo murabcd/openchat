@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { query, internalMutation, mutation } from "./_generated/server";
+import { query, mutation } from "./_generated/server";
 import { api } from "./_generated/api";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { Doc } from "./_generated/dataModel";
@@ -48,5 +48,42 @@ export const updateMemoryPreference = mutation({
     await ctx.db.patch(userId, { isMemoryEnabled: args.enabled });
 
     return null;
+  },
+});
+
+export const updateAccountDetails = mutation({
+  args: {
+    name: v.string(),
+    avatarStorageId: v.optional(v.id("_storage")),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("User not authenticated");
+    }
+
+    let avatarUrlToStore: string | undefined = undefined;
+
+    if (args.avatarStorageId) {
+      const urlFromResult = await ctx.storage.getUrl(args.avatarStorageId);
+      if (urlFromResult) {
+        avatarUrlToStore = urlFromResult;
+      } else {
+        console.warn(
+          `Could not get URL for storageId: ${args.avatarStorageId}. Avatar URL will not be updated.`
+        );
+        avatarUrlToStore = undefined;
+      }
+    }
+
+    await ctx.db.patch(userId, {
+      name: args.name,
+      ...(args.avatarStorageId !== undefined && {
+        avatarStorageId: args.avatarStorageId,
+      }),
+      avatarUrl: args.avatarStorageId ? avatarUrlToStore : undefined,
+    });
+
+    return { success: true };
   },
 });

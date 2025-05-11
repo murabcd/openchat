@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 
-import Image from "next/image";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 
 import { ChevronUp, Settings, Moon, Sun, LogOut } from "lucide-react";
 
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import {
   DropdownMenu,
@@ -23,15 +23,25 @@ import SettingsDialog from "@/components/settings-dialog";
 import SettingsSheet from "@/components/settings-drawer";
 
 import { useAuthActions } from "@convex-dev/auth/react";
-import { Doc } from "@/convex/_generated/dataModel";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import type { Doc } from "@/convex/_generated/dataModel";
 
-export const SidebarUserNav = ({ user }: { user: Doc<"users"> }) => {
+export const SidebarUserNav = ({ user: initialUser }: { user: Doc<"users"> }) => {
   const { setTheme, theme } = useTheme();
   const { signOut } = useAuthActions();
   const router = useRouter();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const isMobile = useIsMobile();
+
+  const user = useQuery(api.users.getUser, {});
+
+  const displayUser = user ?? initialUser;
+
+  if (!displayUser) {
+    return null;
+  }
 
   return (
     <>
@@ -40,14 +50,18 @@ export const SidebarUserNav = ({ user }: { user: Doc<"users"> }) => {
           <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen} modal={true}>
             <DropdownMenuTrigger asChild>
               <SidebarMenuButton className="data-[state=open]:bg-sidebar-accent bg-background data-[state=open]:text-sidebar-accent-foreground h-10">
-                <Image
-                  src={user.image}
-                  alt={user.email}
-                  width={24}
-                  height={24}
-                  className="rounded-full"
-                />
-                <span className="truncate">{user.email}</span>
+                <Avatar className="w-6 h-6 border">
+                  <AvatarImage
+                    src={displayUser.avatarUrl ?? displayUser.image ?? undefined}
+                    alt={displayUser.name ?? displayUser.email}
+                  />
+                  <AvatarFallback className="text-xs">
+                    {displayUser.name?.charAt(0) ?? displayUser.email.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="truncate ml-2">
+                  {displayUser.name ?? displayUser.email}
+                </span>
                 <ChevronUp className="ml-auto" />
               </SidebarMenuButton>
             </DropdownMenuTrigger>
@@ -95,13 +109,13 @@ export const SidebarUserNav = ({ user }: { user: Doc<"users"> }) => {
 
       {isMobile ? (
         <SettingsSheet
-          user={user}
+          user={displayUser}
           open={isSettingsOpen}
           onOpenChange={setIsSettingsOpen}
         />
       ) : (
         <SettingsDialog
-          user={user}
+          user={displayUser}
           open={isSettingsOpen}
           onOpenChange={setIsSettingsOpen}
         />

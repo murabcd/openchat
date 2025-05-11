@@ -13,10 +13,11 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import AccountSettings from "@/components/settings-account";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import AppearanceSettings from "@/components/settings-appearance";
 import DataControlsSettings from "@/components/settings-data-controls";
 import PersonalizationSettings from "@/components/settings-personalization";
+import { SettingsProfileView } from "@/components/settings-profile-view";
 import { SettingsMemoriesView } from "@/components/settings-memories-view";
 
 import type { Doc } from "@/convex/_generated/dataModel";
@@ -33,7 +34,8 @@ type SettingsView =
   | "appearance"
   | "data"
   | "personalization"
-  | "manageMemories";
+  | "manageMemories"
+  | "accountDetails";
 
 const SettingsDrawer = ({ open, onOpenChange, user }: SettingsDrawerProps) => {
   const [currentView, setCurrentView] = useState<SettingsView>("main");
@@ -79,8 +81,41 @@ const SettingsDrawer = ({ open, onOpenChange, user }: SettingsDrawerProps) => {
 
       case "account":
         return (
+          <div className="p-4 flex flex-col gap-6">
+            <div className="flex flex-row items-center justify-between w-full gap-4">
+              <div className="flex flex-row items-center gap-3">
+                <Avatar className="w-12 h-12 border">
+                  <AvatarImage
+                    src={user.avatarUrl ?? user.image ?? undefined}
+                    alt={user.name ?? "User"}
+                  />
+                  <AvatarFallback>
+                    {user.name?.charAt(0) ?? user.email.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="text-sm">
+                  <div>{user.name ?? "User Name"}</div>
+                  <div className="text-muted-foreground truncate">{user.email}</div>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentView("accountDetails")}
+              >
+                Manage
+              </Button>
+            </div>
+          </div>
+        );
+      case "accountDetails":
+        return (
           <div className="p-4">
-            <AccountSettings user={user} />
+            <SettingsProfileView
+              user={user}
+              onSaveSuccess={() => setCurrentView("account")}
+              onCancel={() => setCurrentView("account")}
+            />
           </div>
         );
       case "appearance":
@@ -121,6 +156,8 @@ const SettingsDrawer = ({ open, onOpenChange, user }: SettingsDrawerProps) => {
   const handleBack = () => {
     if (currentView === "manageMemories") {
       setCurrentView("personalization");
+    } else if (currentView === "accountDetails") {
+      setCurrentView("account");
     } else {
       setCurrentView("main");
     }
@@ -129,7 +166,10 @@ const SettingsDrawer = ({ open, onOpenChange, user }: SettingsDrawerProps) => {
   const getTitle = () => {
     if (currentView === "main") return "Settings";
     if (currentView === "manageMemories") return "Saved memories";
-    const item = settingsItems.find((i) => i.view === currentView);
+    if (currentView === "accountDetails") return "Manage account";
+    const item = settingsItems.find(
+      (i) => i.view === currentView || (i.id === currentView && currentView === "account")
+    );
     return item?.label ?? "Settings";
   };
 
@@ -141,7 +181,7 @@ const SettingsDrawer = ({ open, onOpenChange, user }: SettingsDrawerProps) => {
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="h-[70dvh] rounded-lg">
+      <DrawerContent className="h-[70dvh] rounded-tr-lg rounded-tl-lg">
         <DrawerHeader className="flex items-center justify-center relative gap-2 px-4 pt-4 pb-2">
           {currentView !== "main" && (
             <Button

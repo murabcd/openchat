@@ -9,6 +9,8 @@ export default defineSchema({
     email: v.string(),
     image: v.string(),
     emailVerificationTime: v.optional(v.number()),
+    avatarUrl: v.optional(v.string()),
+    avatarStorageId: v.optional(v.id("_storage")),
     isMemoryEnabled: v.optional(v.boolean()),
   }).index("email", ["email"]),
 
