@@ -45,7 +45,7 @@ export const Overview = ({ user }: OverviewProps) => {
           it, contribute or star on{" "}
           <Link
             className="underline underline-offset-4"
-            href="https://github.com/muradpm/openchat"
+            href="https://github.com/murabcd/openchat"
             target="_blank"
           >
             GitHub
